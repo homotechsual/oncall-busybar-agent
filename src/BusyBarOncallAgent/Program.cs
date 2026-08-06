@@ -38,5 +38,20 @@ builder.Services.AddSingleton<TrayApplicationContext>();
 
 var host = builder.Build();
 
+TrayApplicationContext context;
+try
+{
+    context = host.Services.GetRequiredService<TrayApplicationContext>();
+}
+catch (Exception ex)
+{
+    MessageBox.Show(
+        $"busybar-oncall-agent failed to start:\n\n{ex.Message}\n\nCheck appsettings.json (Graph:ClientId is required).",
+        "busybar-oncall-agent",
+        MessageBoxButtons.OK,
+        MessageBoxIcon.Error);
+    return;
+}
+
 ApplicationConfiguration.Initialize();
-Application.Run(host.Services.GetRequiredService<TrayApplicationContext>());
+Application.Run(context);
