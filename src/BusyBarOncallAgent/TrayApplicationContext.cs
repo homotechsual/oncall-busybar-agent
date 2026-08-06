@@ -25,6 +25,7 @@ public sealed class TrayApplicationContext : ApplicationContext
     private DateTimeOffset? _latestMeetingEnd;
     private bool _latestMicActive;
     private bool _pollingPaused;
+    private bool _lastGraphPollFailed;
 
     public TrayApplicationContext(
         IGraphPresenceClient presenceClient,
@@ -43,7 +44,7 @@ public sealed class TrayApplicationContext : ApplicationContext
 
         var menu = new ContextMenuStrip();
         menu.Items.Add("Sign in", null, async (_, _) => await SignInAsync().ConfigureAwait(true));
-        menu.Items.Add("Sign out", null, async (_, _) => await _authService.SignOutAsync().ConfigureAwait(true));
+        menu.Items.Add("Sign out", null, async (_, _) => await SignOutAsync().ConfigureAwait(true));
         menu.Items.Add("Pause", null, (_, _) => _pollingPaused = !_pollingPaused);
         menu.Items.Add("Exit", null, (_, _) => ExitThread());
 
@@ -78,10 +79,12 @@ public sealed class TrayApplicationContext : ApplicationContext
         {
             _latestPresence = await _presenceClient.GetPresenceAsync(CancellationToken.None).ConfigureAwait(true);
             _latestMeetingEnd = await _presenceClient.GetCurrentMeetingEndAsync(CancellationToken.None).ConfigureAwait(true);
+            _lastGraphPollFailed = false;
         }
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "Graph poll failed; keeping last known presence.");
+            _lastGraphPollFailed = true;
         }
 
         await ApplyStateAsync().ConfigureAwait(true);
@@ -110,6 +113,7 @@ public sealed class TrayApplicationContext : ApplicationContext
     private async Task ApplyStateAsync()
     {
         var state = OnCallStateEvaluator.Evaluate(_latestPresence, _latestMeetingEnd, _latestMicActive);
+        _icon.Text = DescribeState(state);
         try
         {
             await _timerController.ApplyAsync(state, CancellationToken.None).ConfigureAwait(true);
@@ -120,15 +124,64 @@ public sealed class TrayApplicationContext : ApplicationContext
         }
     }
 
+    private string DescribeState(OnCallState state)
+    {
+        var summary = state switch
+        {
+            OnCallUntil until => $"BUSY Bar: on call until {until.EndUtc.ToLocalTime():HH:mm}",
+            OnCallIndefinite => "BUSY Bar: on call",
+            _ => "BUSY Bar: idle"
+        };
+
+        return _lastGraphPollFailed
+            ? $"{summary} (last Graph poll failed — signed out?)"
+            : summary;
+    }
+
     private async Task SignInAsync()
     {
         try
         {
             await _authService.GetAccessTokenAsync(CancellationToken.None).ConfigureAwait(true);
+            if (!_graphTimer.Enabled)
+            {
+                _graphTimer.Start();
+            }
         }
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "Sign in failed.");
         }
+    }
+
+    private async Task SignOutAsync()
+    {
+        try
+        {
+            await _authService.SignOutAsync().ConfigureAwait(true);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Sign out failed.");
+        }
+        finally
+        {
+            _graphTimer.Stop();
+        }
+    }
+
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            _graphTimer.Stop();
+            _graphTimer.Dispose();
+            _micTimer.Stop();
+            _micTimer.Dispose();
+            _icon.Visible = false;
+            _icon.Dispose();
+        }
+
+        base.Dispose(disposing);
     }
 }
