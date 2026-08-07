@@ -1,4 +1,4 @@
-# busybar-oncall-agent
+# oncall-busybar-agent
 
 A Windows tray app that keeps a physical BUSY Bar's built-in timer in sync with real Microsoft
 Teams on call status: started (sized to your current meeting's remaining time when known) the
@@ -13,7 +13,7 @@ This app needs its own Entra app registration to sign in with. Register one in
 [the Entra admin center](https://entra.microsoft.com/):
 
 1. **App registrations** then **New registration**.
-2. Name it whatever you like (for example `busybar-oncall-agent`).
+2. Name it whatever you like (for example `oncall-busybar-agent`).
 3. Under **Supported account types**, choose **Accounts in any organizational directory**
    (multi tenant) if you want anyone to be able to sign in without registering their own app, or
    **Accounts in this organizational directory only** if you want it restricted to your tenant.
@@ -25,7 +25,7 @@ This app needs its own Entra app registration to sign in with. Register one in
 
 ## Configure
 
-Edit `src/BusyBarOncallAgent/appsettings.json` (or set the equivalent environment variables,
+Edit `src/OncallAgent/appsettings.json` (or set the equivalent environment variables,
 double underscore nesting, for example `Graph__ClientId`):
 
 | Key | Default | Description |
@@ -40,7 +40,7 @@ double underscore nesting, for example `Graph__ClientId`):
 ## Run
 
 ```bash
-dotnet run --project src/BusyBarOncallAgent/BusyBarOncallAgent.csproj
+dotnet run --project src/OncallAgent/OncallAgent.csproj
 ```
 
 A tray icon appears. Right click it to sign in the first time; after that, your token is cached
@@ -49,6 +49,6 @@ and refreshed silently.
 ## Development
 
 ```bash
-dotnet build BusyBarOncallAgent.sln
-dotnet test BusyBarOncallAgent.sln
+dotnet build OncallAgent.sln
+dotnet test OncallAgent.sln
 ```
