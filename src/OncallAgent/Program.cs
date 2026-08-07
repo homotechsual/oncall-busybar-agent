@@ -43,6 +43,7 @@ builder.Services.AddSingleton(provider =>
     return new BusyBar(new Busy.Bar.BusyBarOptions { Addr = options.Address });
 });
 builder.Services.AddSingleton<BusyBarTimerController>();
+builder.Services.AddSingleton<IStartupShortcutManager, StartupShortcutManager>();
 builder.Services.AddSingleton<TrayApplicationContext>();
 
 var host = builder.Build();

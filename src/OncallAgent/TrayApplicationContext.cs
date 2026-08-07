@@ -19,6 +19,7 @@ public sealed class TrayApplicationContext : ApplicationContext
     private readonly IGraphAuthService _authService;
     private readonly MicrophoneActivityDetector _micDetector;
     private readonly BusyBarTimerController _timerController;
+    private readonly IStartupShortcutManager _startupShortcutManager;
     private readonly ILogger<TrayApplicationContext> _logger;
 
     private GraphPresenceSnapshot? _latestPresence;
@@ -32,6 +33,7 @@ public sealed class TrayApplicationContext : ApplicationContext
         IGraphAuthService authService,
         MicrophoneActivityDetector micDetector,
         BusyBarTimerController timerController,
+        IStartupShortcutManager startupShortcutManager,
         IOptions<GraphOptions> graphOptions,
         IOptions<MicOptions> micOptions,
         ILogger<TrayApplicationContext> logger)
@@ -40,17 +42,47 @@ public sealed class TrayApplicationContext : ApplicationContext
         _authService = authService;
         _micDetector = micDetector;
         _timerController = timerController;
+        _startupShortcutManager = startupShortcutManager;
         _logger = logger;
 
         var menu = new ContextMenuStrip();
         menu.Items.Add("Sign in", null, async (_, _) => await SignInAsync().ConfigureAwait(true));
         menu.Items.Add("Sign out", null, async (_, _) => await SignOutAsync().ConfigureAwait(true));
         menu.Items.Add("Pause", null, (_, _) => _pollingPaused = !_pollingPaused);
+
+        var startupItem = new ToolStripMenuItem("Start with Windows")
+        {
+            CheckOnClick = true,
+            Checked = _startupShortcutManager.IsEnabled()
+        };
+        startupItem.CheckedChanged += (_, _) =>
+        {
+            try
+            {
+                if (startupItem.Checked)
+                {
+                    _startupShortcutManager.Enable();
+                }
+                else
+                {
+                    _startupShortcutManager.Disable();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to update startup shortcut.");
+            }
+        };
+        menu.Items.Add(startupItem);
+
         menu.Items.Add("Exit", null, (_, _) => ExitThread());
 
         _icon = new NotifyIcon
         {
-            Icon = SystemIcons.Application,
+            // Uses the exe's own embedded icon (set via <ApplicationIcon> in the csproj) rather
+            // than a separate file lookup, so the tray icon and the exe's file icon always match
+            // and stay in sync automatically.
+            Icon = Icon.ExtractAssociatedIcon(Application.ExecutablePath) ?? SystemIcons.Application,
             Text = "BUSY Bar on call agent",
             ContextMenuStrip = menu,
             Visible = true
