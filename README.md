@@ -40,15 +40,27 @@ double underscore nesting, for example `Graph__ClientId`):
 ## Run
 
 ```bash
-dotnet run --project src/OncallAgent/OncallAgent.csproj
+dotnet build OncallAgent.sln
 ```
 
-A tray icon appears. Right click it to sign in the first time; after that, your token is cached
-and refreshed silently.
+Then run the built executable directly:
+
+```bash
+src\OncallAgent\bin\Debug\net10.0-windows\OncallAgent.exe
+```
+
+A tray icon appears, with no console window. Right click it to sign in the first time; after
+that, your token is cached and refreshed silently.
+
+Don't use `dotnet run` for normal use: it always launches through the `dotnet` CLI's own console
+host, so a console window stays open and attached for as long as the app runs, whatever the
+target's own output type is. `dotnet run` is fine for development iteration (see below), where
+having that console around for log output is actually useful.
 
 ## Development
 
 ```bash
 dotnet build OncallAgent.sln
 dotnet test OncallAgent.sln
+dotnet run --project src/OncallAgent/OncallAgent.csproj
 ```
