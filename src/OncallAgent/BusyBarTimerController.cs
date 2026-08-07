@@ -14,6 +14,12 @@ public sealed class BusyBarTimerController
     // "Busy" slot's ID (BusyProfileSlot.Busy, title "BUSY") — the built-in profile, appropriate
     // for an automated on-call indicator rather than the user-configurable "Custom" slot.
     private const string CardId = "00000000-0000-0000-0000-000000000000";
+
+    // The firmware ships a fixed set of built-in status themes (keep_out, dnd, meeting, on_call,
+    // lunch, back_soon, booked, flow, chill_time, on_air, coding, low_social_battery) selected via
+    // BusyBarSettings.Theme on the snapshot, independent of which profile slot (CardId) is used.
+    private static readonly BusyBarSettings OnCallTheme = new("on_call", ShowWorkPhaseOnly: false, TriggerSmartHome: true);
+
     private static readonly TimeSpan ReapplyThreshold = TimeSpan.FromSeconds(60);
 
     private readonly BusyBar _bar;
@@ -48,12 +54,13 @@ public sealed class BusyBarTimerController
     private static BusySnapshotState ToSnapshotState(OnCallState state) => state switch
     {
         NotOnCall => new BusySnapshotNotStarted(),
-        OnCallIndefinite => new BusySnapshotInfinite { CardId = CardId, IsPaused = false },
+        OnCallIndefinite => new BusySnapshotInfinite { CardId = CardId, IsPaused = false, BusyBarSettings = OnCallTheme },
         OnCallUntil until => new BusySnapshotSimple
         {
             CardId = CardId,
             TimeLeftMs = Math.Max(0, (long)(until.EndUtc - DateTimeOffset.UtcNow).TotalMilliseconds),
-            IsPaused = false
+            IsPaused = false,
+            BusyBarSettings = OnCallTheme
         },
         _ => throw new ArgumentOutOfRangeException(nameof(state))
     };
