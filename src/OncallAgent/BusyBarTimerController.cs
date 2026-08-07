@@ -5,11 +5,15 @@ namespace OncallAgent;
 
 /// <summary>Turns an <see cref="OnCallState"/> into BUSY timer API calls, tracking the last
 /// state actually applied so it does not restart the device's timer (and its animation) on every
-/// poll while nothing has meaningfully changed. The CardId value used to start a fresh timer is
-/// not confirmed against a real device; see this plan's Global Constraints.</summary>
+/// poll while nothing has meaningfully changed.</summary>
 public sealed class BusyBarTimerController
 {
-    private const string CardId = "oncall";
+    // A device's two BUSY timer profile slots have fixed, firmware-assigned IDs, not
+    // user/caller-chosen ones: BusySnapshotSetAsync rejects any other CardId with
+    // "400 Bad Request: Failed to parse snapshot" (confirmed against a real device). This is the
+    // "Busy" slot's ID (BusyProfileSlot.Busy, title "BUSY") — the built-in profile, appropriate
+    // for an automated on-call indicator rather than the user-configurable "Custom" slot.
+    private const string CardId = "00000000-0000-0000-0000-000000000000";
     private static readonly TimeSpan ReapplyThreshold = TimeSpan.FromSeconds(60);
 
     private readonly BusyBar _bar;
