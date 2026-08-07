@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using Microsoft.Extensions.Options;
 using Microsoft.Identity.Client;
 using Microsoft.Identity.Client.Broker;
@@ -11,6 +12,9 @@ namespace OncallAgent.Graph;
 public sealed class GraphAuthService : IGraphAuthService
 {
     private static readonly string[] Scopes = ["Presence.Read", "Calendars.Read"];
+
+    [DllImport("user32.dll")]
+    private static extern IntPtr GetForegroundWindow();
 
     private readonly IPublicClientApplication _app;
 
@@ -49,7 +53,12 @@ public sealed class GraphAuthService : IGraphAuthService
             }
         }
 
+        // The WAM broker requires a parent window handle to attach its sign-in dialog to;
+        // AcquireTokenInteractive throws MsalClientException("window_handle_required") without
+        // one. This is a tray-only app with no main window, so the foreground window at the
+        // moment sign-in is triggered (whatever the user just clicked) stands in as the parent.
         var interactiveResult = await _app.AcquireTokenInteractive(Scopes)
+            .WithParentActivityOrWindow(GetForegroundWindow())
             .ExecuteAsync(cancellationToken).ConfigureAwait(false);
         return interactiveResult.AccessToken;
     }

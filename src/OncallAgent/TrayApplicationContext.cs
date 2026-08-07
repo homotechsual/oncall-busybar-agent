@@ -179,10 +179,14 @@ public sealed class TrayApplicationContext : ApplicationContext
             {
                 _graphTimer.Start();
             }
+            _icon.ShowBalloonTip(5000, "BUSY Bar on call agent", "Signed in.", ToolTipIcon.Info);
         }
         catch (Exception ex)
         {
+            // The packaged app has no console, so a log-only failure is invisible to the user —
+            // a balloon tip is the only way a background tray app can surface an error at all.
             _logger.LogWarning(ex, "Sign in failed.");
+            _icon.ShowBalloonTip(5000, "BUSY Bar on call agent", $"Sign in failed: {ex.Message}", ToolTipIcon.Error);
         }
     }
 
@@ -191,10 +195,12 @@ public sealed class TrayApplicationContext : ApplicationContext
         try
         {
             await _authService.SignOutAsync().ConfigureAwait(true);
+            _icon.ShowBalloonTip(5000, "BUSY Bar on call agent", "Signed out.", ToolTipIcon.Info);
         }
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "Sign out failed.");
+            _icon.ShowBalloonTip(5000, "BUSY Bar on call agent", $"Sign out failed: {ex.Message}", ToolTipIcon.Error);
         }
         finally
         {
