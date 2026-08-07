@@ -19,9 +19,16 @@ This app needs its own Entra app registration to sign in with. Register one in
    **Accounts in this organizational directory only** if you want it restricted to your tenant.
 4. Under **Redirect URI**, choose platform **Mobile and desktop applications** and add
    `http://localhost`.
-5. Under **API permissions**, add Microsoft Graph delegated permissions `Presence.Read` and
+5. This app signs in via the Windows broker (WAM), which requires its own redirect URI — add a
+   second entry under that same **Mobile and desktop applications** platform:
+   `ms-appx-web://Microsoft.AAD.BrokerPlugin/<client-id>`, substituting the app's own client ID
+   (from step 6 below) for `<client-id>`. Skipping this produces
+   `AADSTS50011: The redirect URI ... does not match the redirect URIs configured for the
+   application` the moment you try to sign in.
+6. Under **API permissions**, add Microsoft Graph delegated permissions `Presence.Read` and
    `Calendars.Read`.
-6. Copy the **Application (client) ID** from the Overview page.
+7. Copy the **Application (client) ID** from the Overview page, and go back to add it into the
+   redirect URI from step 5.
 
 ## Configure
 
