@@ -37,25 +37,38 @@ double underscore nesting, for example `Graph__ClientId`):
 | `Mic:PollIntervalSeconds` | `5` | How often to check local microphone activity. |
 | `BusyBar:Address` | `10.0.4.20` | Network address of the BUSY Bar device. |
 
-## Run
+## Run (production)
+
+For actual day-to-day use, publish a self-contained single-file build rather than running from
+`bin\Debug`: it doesn't need the .NET runtime installed, it's a single `.exe` you can drop
+anywhere, and it's what you'd point a Startup shortcut at.
 
 ```bash
-dotnet build OncallAgent.sln
+dotnet publish src\OncallAgent\OncallAgent.csproj -c Release -r win-x64 --self-contained -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o publish
 ```
 
-Then run the built executable directly:
+> If this fails with `MSB3094: "DestinationFiles" refers to 1 item(s), and "SourceFiles" refers
+> to N item(s)`, the repo (or the `-o` output path) is sitting under a Windows user profile
+> folder whose name contains an apostrophe (`C:\Users\O'Brien\...`) — the .NET SDK's publish
+> targets mis-batch file copies when an apostrophe appears anywhere in the path. Publish from
+> (or to) a path without one, e.g. `-o C:\publish\oncall-busybar-agent`.
 
-```bash
-src\OncallAgent\bin\Debug\net10.0-windows\OncallAgent.exe
-```
+Copy `publish\OncallAgent.exe` and `publish\appsettings.json` wherever you want to run it from
+(they must stay in the same folder), edit `appsettings.json` there per the Configure section
+above, then run the exe directly. A tray icon appears, with no console window. Right click it to
+sign in the first time; after that, your token is cached and refreshed silently.
 
-A tray icon appears, with no console window. Right click it to sign in the first time; after
-that, your token is cached and refreshed silently.
+Right click the tray icon and check **Start with Windows** to add a shortcut to the exe in your
+Startup folder, so it launches automatically at login. This uses a Startup-folder shortcut
+rather than a registry Run key deliberately: Run keys are the autorun technique most heavily
+scrutinized by security/EDR tooling, and a shortcut achieves the same result without tripping it.
+Unchecking it removes the shortcut.
 
-Don't use `dotnet run` for normal use: it always launches through the `dotnet` CLI's own console
-host, so a console window stays open and attached for as long as the app runs, whatever the
-target's own output type is. `dotnet run` is fine for development iteration (see below), where
-having that console around for log output is actually useful.
+**Code signing:** the published exe is unsigned. Unsigned executables commonly trigger SmartScreen
+warnings on first run and may be blocked outright by endpoint security policy in managed
+environments. If that's a problem for your organization, sign `OncallAgent.exe` with your own
+code-signing certificate (e.g. via `signtool sign`) as part of your build/deployment process —
+that's outside the scope of this repo.
 
 ## Development
 
@@ -64,3 +77,14 @@ dotnet build OncallAgent.sln
 dotnet test OncallAgent.sln
 dotnet run --project src/OncallAgent/OncallAgent.csproj
 ```
+
+Or run the debug build's exe directly (also console-free, unlike `dotnet run`):
+
+```bash
+src\OncallAgent\bin\Debug\net10.0-windows\OncallAgent.exe
+```
+
+Don't use `dotnet run` for normal/production use: it always launches through the `dotnet` CLI's
+own console host, so a console window stays open and attached for as long as the app runs,
+whatever the target's own output type is. `dotnet run` is fine for development iteration, where
+having that console around for log output is actually useful.
