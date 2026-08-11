@@ -73,7 +73,7 @@ Settings load in four layers, each overriding the one before it:
 Any of the settings above can be locked down centrally by setting registry values under
 `HKLM\SOFTWARE\Policies\OncallBusyBarAgent`, one subkey per section:
 
-```
+```txt
 HKLM\SOFTWARE\Policies\OncallBusyBarAgent\Graph      (values: ClientId, TenantId, PollIntervalSeconds)
 HKLM\SOFTWARE\Policies\OncallBusyBarAgent\Mic         (values: Enabled, PollIntervalSeconds)
 HKLM\SOFTWARE\Policies\OncallBusyBarAgent\BusyBar     (values: Address)
@@ -85,6 +85,10 @@ address values can be a String or a DWORD, whichever your deployment tool makes 
 registry values get set is up to you: an Intune Settings Catalog custom OMA-URI profile, a Win32
 app deployment script, or plain Group Policy all work identically from this app's point of view —
 it only reads the registry, it doesn't care how the values arrived.
+
+For a friendlier, point-and-click way to set these than raw OMA-URI or a script, see
+[`admx/`](admx/README.md) — an administrative template (`.admx`/`.adml`) you can import into
+Intune's Settings Catalog or use with Group Policy directly.
 
 ## Run (production)
 
