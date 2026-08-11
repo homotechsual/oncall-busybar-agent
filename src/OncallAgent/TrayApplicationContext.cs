@@ -27,6 +27,7 @@ public sealed class TrayApplicationContext : ApplicationContext
     private bool _latestMicActive;
     private bool _pollingPaused;
     private bool _lastGraphPollFailed;
+    private bool _suppressStartupCheckedChanged;
 
     public TrayApplicationContext(
         IGraphPresenceClient presenceClient,
@@ -200,15 +201,24 @@ public sealed class TrayApplicationContext : ApplicationContext
 
         startupItem.CheckedChanged += async (_, _) =>
         {
+            if (_suppressStartupCheckedChanged)
+            {
+                return;
+            }
+
             try
             {
-                if (startupItem.Checked)
+                var succeeded = startupItem.Checked
+                    ? await _startupShortcutManager.EnableAsync().ConfigureAwait(true)
+                    : await _startupShortcutManager.DisableAsync().ConfigureAwait(true);
+
+                if (!succeeded)
                 {
-                    await _startupShortcutManager.EnableAsync().ConfigureAwait(true);
-                }
-                else
-                {
-                    await _startupShortcutManager.DisableAsync().ConfigureAwait(true);
+                    _suppressStartupCheckedChanged = true;
+                    startupItem.Checked = !startupItem.Checked;
+                    _suppressStartupCheckedChanged = false;
+                    _icon.ShowBalloonTip(5000, "BUSY Bar on call agent",
+                        "Windows didn't apply that change — startup may be managed by policy.", ToolTipIcon.Warning);
                 }
             }
             catch (Exception ex)
