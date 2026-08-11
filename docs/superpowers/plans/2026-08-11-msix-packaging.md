@@ -713,100 +713,80 @@ In the version dialog, set **Target Version** to the latest installed Windows SD
 Version** to at least **Windows 10, version 1809 (10.0; Build 17763)** or later (comfortably covers
 the `StartupTaskState.EnabledByPolicy` value used in Task 1, added in SDK 17134).
 
-- [ ] **Step 3: Reference the app project as the entry point**
+- [ ] **Step 3: Reference the app project as the entry point (already done directly in the file)**
 
-In Solution Explorer, under `OncallAgent.Package` → **Dependencies**, right-click → **Add Project
-Reference** → check `OncallAgent` → OK. If more than one application ends up listed under the
-packaging project's **Applications** node, right-click `OncallAgent` → **Set as Entry Point** (with
-only one referenced project this is usually already the case).
+`OncallAgent.Package.wapproj` didn't end up with a project reference after Step 1's wizard — a
+plain `<ProjectReference Include="..\src\OncallAgent\OncallAgent.csproj" />` ItemGroup has been
+added directly to the file (a well-defined, VS-version-independent bit of MSBuild XML, safe to
+hand-edit unlike the `.sln` platform matrix in Step 4 below). In Solution Explorer, confirm
+`OncallAgent.Package` → **Dependencies** now shows `OncallAgent` — if VS still doesn't show it after
+reloading the project, right-click **Dependencies** → **Add Project Reference** → check `OncallAgent`
+→ OK as a fallback.
 
-- [ ] **Step 4: Configure x86, x64, and ARM64 platforms (amended per human request after final review)**
+- [ ] **Step 4: Wire up x86, x64, and ARM64 in the solution (amended per human request after final review — rewritten against the actual file state, not assumed)**
 
-MSIX packages (unlike a plain "Any CPU" exe) are tied to one concrete processor architecture each,
-so Windows/the Store can hand the right package to the right device — this plan now targets all
-three Windows desktop architectures rather than x64 only, per Microsoft's own recommendation to
-build for every architecture to reach the widest range of devices.
+Reading the real files after Step 1 revealed the gap: `OncallAgent.sln` already has `x86` and `x64`
+solution platforms (from before this plan existed), but every single one of `OncallAgent`'s
+`ProjectConfigurationPlatforms` entries — for **all** of Any CPU, x64, *and* x86 — maps `ActiveCfg`
+and `Build.0` to `Debug|Any CPU` / `Release|Any CPU`. In other words, x64 and x86 already "exist" as
+selectable options but have never actually built anything except Any CPU underneath, for any
+platform, ever. `ARM64` doesn't exist in the solution at all yet. And `OncallAgent.Package` itself
+isn't listed as a project in `OncallAgent.sln` on disk yet either (Visual Studio's in-memory
+solution likely already shows it from Step 1's wizard — this needs **File → Save All** to persist,
+if it hasn't already).
 
-Open **Build** → **Configuration Manager**. For each of `x86`, `x64`, and `ARM64`: add a platform
-entry via the **Platform** dropdown → **New...** → (architecture), copying settings from `Any CPU`,
-if it's missing — for **both** `OncallAgent.Package` and `OncallAgent`. Then confirm, for every one
-of the three, that `OncallAgent.Package`'s Release|(architecture) configuration builds
-`OncallAgent`'s Release|(architecture) — not Release|Any CPU. This is the same "silently still
-building Any CPU underneath" gotcha regardless of which architecture you're checking, so verify all
-three individually rather than assuming the same fix carries over.
+MSIX packages are tied to one concrete architecture each — a plain "Any CPU" managed build can't be
+what actually ships inside an x86/x64/ARM64-specific package — so this has to be fixed for real, not
+just have the option exist. Do this in **Build → Configuration Manager**:
 
-- [ ] **Step 5: Add the startup task extension to the manifest**
+1. **Active solution platform** dropdown → **New...** → select `ARM64`, "Copy settings from:" `x64`
+   → OK. This adds the missing third platform at the solution level.
+2. In the grid, find the `OncallAgent` row. For **each** of the `x64`, `x86`, and `ARM64` solution
+   platform columns (leave `Any CPU` alone — that one still exists for plain `dotnet run`/`dotnet
+   build` iteration and doesn't need to change): open that row's **Platform** dropdown. If it
+   already lists `x64`/`x86`/`ARM64` as options, select the matching one (not `Any CPU`). If it
+   doesn't, choose **New...** and create it. Repeat for all three — this is the exact fix for the
+   "quietly still building Any CPU" gap found above, and it has to be done per architecture, not
+   once.
+3. Do the same for the `OncallAgent.Package` row: its `x64`, `x86`, and `ARM64` columns should each
+   point at the matching real platform (this is usually already correct for a fresh packaging
+   project, since `.wapproj` files declare all of x86/x64/ARM/ARM64/AnyCPU as real
+   `ProjectConfiguration`s by default — confirm rather than assume, the same way as for `OncallAgent`
+   above).
+4. Confirm the **Build** and **Deploy** checkboxes are ticked for `OncallAgent.Package` under the
+   Release configuration for all three platforms — an unticked box there is a common reason "Build
+   Solution" silently skips packaging one architecture with no error.
+5. **File → Save All**, then re-open `OncallAgent.sln` in a text editor (or re-run `git diff
+   OncallAgent.sln` from a terminal) to sanity-check that `OncallAgent`'s `ActiveCfg`/`Build.0` lines
+   for x64/x86/ARM64 now read e.g. `Release|x64 = Release|x64` rather than `Release|x64 =
+   Release|Any CPU` — this is the one-line signature of the bug this step exists to fix, so it's a
+   fast way to confirm it actually took.
 
-Right-click `OncallAgent.Package\Package.appxmanifest` → **View Code** (not the designer). Confirm
-the root `<Package>` element declares the `desktop` namespace and lists it as ignorable — Visual
-Studio's default template usually already includes both:
+- [ ] **Step 5: Add the startup task extension to the manifest (already done directly in the file)**
 
-```xml
-<Package
-  xmlns:desktop="http://schemas.microsoft.com/appx/manifest/desktop/windows10"
-  IgnorableNamespaces="uap rescap desktop">
-```
+`Package.appxmanifest` has had the `desktop`/`desktop6` namespace declarations, the
+`windows.startupTask` extension (`TaskId="OncallBusyBarAgentStartup"`, matching
+`PackagedStartupTaskManager.TaskId` from Task 1 exactly, case-sensitive — the WinRT
+`StartupTask.GetAsync` call in that class looks up the task by this string), and the
+`unvirtualizedResources` capability + `FileSystemWriteVirtualization` property from Step 5a below
+all added directly, since appxmanifest XML is a standard, well-documented schema safe to hand-edit
+(unlike the `.sln` platform matrix in Step 4). In Visual Studio, right-click
+`OncallAgent.Package\Package.appxmanifest` → **View Code** to confirm it now has all of: the four
+namespace declarations (`uap`, `rescap`, `desktop`, `desktop6`) all listed in `IgnorableNamespaces`;
+an `<Extensions>` element under `<Application>` with the `windows.startupTask` declaration; and
+`unvirtualizedResources` under `<Capabilities>`.
 
-(Add `desktop` to the existing `IgnorableNamespaces` list if it's not already there, rather than
-overwriting whatever else is listed.)
-
-Then, inside the `<Application>` element (under `<Applications>`), add an `<Extensions>` element
-containing the startup task declaration, if `<Extensions>` doesn't already exist:
-
-```xml
-<Applications>
-  <Application Id="App" Executable="$targetnametoken$.exe" EntryPoint="$targetentrypoint$">
-    <!-- ... existing uap:VisualElements etc. unchanged ... -->
-    <Extensions>
-      <desktop:Extension Category="windows.startupTask" Executable="OncallAgent.exe" EntryPoint="Windows.FullTrustApplication">
-        <desktop:StartupTask TaskId="OncallBusyBarAgentStartup" Enabled="true" DisplayName="BUSY Bar on call agent" />
-      </desktop:Extension>
-    </Extensions>
-  </Application>
-</Applications>
-```
-
-`TaskId="OncallBusyBarAgentStartup"` must match `PackagedStartupTaskManager.TaskId` from Task 1
-exactly (case-sensitive) — the WinRT `StartupTask.GetAsync` call in that class looks up the task by
-this string.
-
-- [ ] **Step 5a: Disable file-system write virtualization (added during final review)**
+- [ ] **Step 5a: Disable file-system write virtualization (added during final review; already done directly in the file, see Step 5)**
 
 By default, a packaged desktop app's writes to `%LOCALAPPDATA%` are redirected by Windows to a
 private per-package folder rather than the real path — which would silently break
 `UserConfigBootstrapper`'s LocalAppData file (Task 3) and every path in README.md's "Configure"
-section that tells users to edit `%LOCALAPPDATA%\oncall-busybar-agent\appsettings.json`. Opt out of
-that redirection so the packaged app uses the same real path the unpackaged build already does, in
-the same `<Package>` element edited in Step 5, alongside the existing `desktop`/`uap`/`rescap`
-namespace declarations:
-
-```xml
-<Package
-  xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
-  xmlns:desktop6="http://schemas.microsoft.com/appx/manifest/desktop/windows10/6"
-  IgnorableNamespaces="uap rescap desktop desktop6">
-```
-
-Add the capability under `<Capabilities>`:
-
-```xml
-<Capabilities>
-  <rescap:Capability Name="unvirtualizedResources" />
-</Capabilities>
-```
-
-And the property under `<Properties>`:
-
-```xml
-<Properties>
-  <desktop6:FileSystemWriteVirtualization>disabled</desktop6:FileSystemWriteVirtualization>
-</Properties>
-```
-
-(Merge these into whatever `<Capabilities>`/`<Properties>` elements the template already generated
-— don't duplicate the elements if they already exist.) Step 8 below (confirming the LocalAppData
-file's real path) depends on this being in place; if Store certification flags
-`unvirtualizedResources`, that's a signal to fall back to branching on
+section that tells users to edit `%LOCALAPPDATA%\oncall-busybar-agent\appsettings.json`. The
+`<desktop6:FileSystemWriteVirtualization>disabled</desktop6:FileSystemWriteVirtualization>` property
+and its matching `rescap:Capability Name="unvirtualizedResources"` (both applied in Step 5 above)
+opt out of that redirection so the packaged app uses the same real path the unpackaged build already
+does. Step 8 below (confirming the LocalAppData file's real path) depends on this being in place; if
+Store certification flags `unvirtualizedResources`, that's a signal to fall back to branching on
 `OncallAgent.Packaging.IPackagedAppContext.IsPackaged` and using WinRT `ApplicationData.Current.
 LocalFolder` instead — not attempted here since the manifest approach is simpler and sufficient for
 a full-trust Desktop Bridge app.
@@ -830,6 +810,18 @@ follow the rest of the wizard (a self-signed test certificate is fine here) → 
 (double-click it, or `Add-AppxPackage -Path <path>.msixbundle` in PowerShell) — on whichever
 architecture machine you're testing from; installing a bundle automatically picks the matching
 package inside it.
+
+The `.wapproj` already has `<AppxBundle>Always</AppxBundle>` and
+`<AppxBundlePlatforms>x86|x64|ARM64</AppxBundlePlatforms>` set, so once Step 4's platform wiring is
+correct, a bundle can also be produced from the command line instead of the wizard (useful for
+scripting a rebuild without reopening the wizard each time — this is still local/manual, not the
+CI/CD automation the Global Constraints put out of scope):
+
+```powershell
+msbuild OncallAgent.Package\OncallAgent.Package.wapproj /t:Publish /p:Configuration=Release /p:UapAppxPackageBuildMode=SideloadOnly /p:AppxBundlePlatforms="x86|x64|ARM64" /p:AppxBundle=Always /p:AppxPackageDir=AppPackages\
+```
+
+(Requires `msbuild` on PATH — the Developer PowerShell/Command Prompt for VS shortcut sets this up.)
 
 - [ ] **Step 8: Verify packaged behavior end-to-end**
 
