@@ -1,8 +1,10 @@
 using Busy.Bar;
 using OncallAgent;
+using OncallAgent.Config;
 using OncallAgent.Graph;
 using OncallAgent.Mic;
 using OncallAgent.Packaging;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
@@ -17,6 +19,20 @@ var builder = Host.CreateApplicationBuilder(new HostApplicationBuilderSettings
     Args = args,
     ContentRootPath = AppContext.BaseDirectory
 });
+
+// The bundled appsettings.json (loaded above via ContentRootPath) ships factory defaults and is
+// read-only once packaged as MSIX; user/IT overrides layer on top of it here, highest precedence
+// last: a per-user writable copy, then an IT-managed registry policy (see RegistryConfigurationProvider).
+var userConfigPath = Path.Combine(
+    Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+    "oncall-busybar-agent",
+    "appsettings.json");
+UserConfigBootstrapper.EnsureUserConfigExists(
+    Path.Combine(AppContext.BaseDirectory, "appsettings.json"),
+    userConfigPath);
+builder.Configuration
+    .AddJsonFile(userConfigPath, optional: true, reloadOnChange: false)
+    .AddOncallAgentPolicyOverrides();
 
 builder.Services.AddOptions<GraphOptions>()
     .Bind(builder.Configuration.GetSection(GraphOptions.SectionName))
