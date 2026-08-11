@@ -17,16 +17,22 @@ public sealed class PackagedStartupTaskManager : IStartupShortcutManager
         return task.State is StartupTaskState.Enabled or StartupTaskState.EnabledByPolicy;
     }
 
-    public async Task EnableAsync()
+    public async Task<bool> EnableAsync()
     {
         var task = await GetTaskAsync().ConfigureAwait(false);
-        await task.RequestEnableAsync().AsTask().ConfigureAwait(false);
+        var state = await task.RequestEnableAsync().AsTask().ConfigureAwait(false);
+        return state is StartupTaskState.Enabled or StartupTaskState.EnabledByPolicy;
     }
 
-    public async Task DisableAsync()
+    public async Task<bool> DisableAsync()
     {
         var task = await GetTaskAsync().ConfigureAwait(false);
         task.Disable();
+        // Re-fetching via GetTaskAsync() after Disable() rather than trusting the original task's
+        // State to have updated in place — safer given WinRT's actual refresh semantics aren't
+        // something verifiable without a real packaged run.
+        var afterTask = await GetTaskAsync().ConfigureAwait(false);
+        return afterTask.State is StartupTaskState.Disabled or StartupTaskState.DisabledByUser;
     }
 
     private static Task<StartupTask> GetTaskAsync() => StartupTask.GetAsync(TaskId).AsTask();

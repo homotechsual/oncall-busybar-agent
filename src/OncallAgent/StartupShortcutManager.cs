@@ -21,7 +21,7 @@ public sealed class StartupShortcutManager : IStartupShortcutManager
 
     public Task<bool> IsEnabledAsync() => Task.FromResult(File.Exists(ShortcutPath));
 
-    public Task EnableAsync()
+    public Task<bool> EnableAsync()
     {
         var shellLink = (IShellLinkW)new ShellLink();
         shellLink.SetPath(Application.ExecutablePath);
@@ -29,16 +29,16 @@ public sealed class StartupShortcutManager : IStartupShortcutManager
         shellLink.SetDescription("BUSY Bar on call agent");
 
         ((IPersistFile)shellLink).Save(ShortcutPath, true);
-        return Task.CompletedTask;
+        return Task.FromResult(true);
     }
 
-    public Task DisableAsync()
+    public Task<bool> DisableAsync()
     {
         if (File.Exists(ShortcutPath))
         {
             File.Delete(ShortcutPath);
         }
-        return Task.CompletedTask;
+        return Task.FromResult(true);
     }
 }
 
