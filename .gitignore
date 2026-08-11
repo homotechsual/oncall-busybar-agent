@@ -13,3 +13,6 @@ OncallAgent.Package/AppPackages/
 OncallAgent.Package/BundleArtifacts/
 OncallAgent.Package/*.assets.cache
 OncallAgent.Package/*.Backup.tmp
+
+# Test-signing certificate -- contains a private key, never commit
+OncallAgent.Package/*.pfx
