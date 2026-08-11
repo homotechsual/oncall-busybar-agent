@@ -3,13 +3,6 @@ using System.Text;
 
 namespace OncallAgent;
 
-public interface IStartupShortcutManager
-{
-    bool IsEnabled();
-    void Enable();
-    void Disable();
-}
-
 /// <summary>Toggles a Windows Startup-folder shortcut rather than a registry Run key: registry
 /// Run keys are the most heavily monitored autorun technique by security/EDR tooling, and a
 /// shortcut is just as effective for a per-user tray app.
