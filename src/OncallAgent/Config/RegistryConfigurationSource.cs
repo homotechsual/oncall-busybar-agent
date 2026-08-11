@@ -4,8 +4,14 @@ namespace OncallAgent.Config;
 
 public sealed class RegistryConfigurationSource : IConfigurationSource
 {
+    /// <summary>Optional reader override for tests — a hermetic precedence test needs to supply a
+    /// fake in place of the real registry. Defaults to null, which falls back to
+    /// <see cref="Win32PolicyRegistryReader"/>, so existing callers (e.g.
+    /// <see cref="RegistryConfigurationExtensions.AddOncallAgentPolicyOverrides"/>) need no changes.</summary>
+    public IPolicyRegistryReader? Reader { get; init; }
+
     public IConfigurationProvider Build(IConfigurationBuilder builder) =>
-        new RegistryConfigurationProvider(new Win32PolicyRegistryReader());
+        new RegistryConfigurationProvider(Reader ?? new Win32PolicyRegistryReader());
 }
 
 public static class RegistryConfigurationExtensions
