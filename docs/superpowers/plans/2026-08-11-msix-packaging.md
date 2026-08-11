@@ -782,6 +782,15 @@ namespace declarations (`uap`, `rescap`, `desktop`, `desktop6`) all listed in `I
 an `<Extensions>` element under `<Application>` with the `windows.startupTask` declaration; and
 `unvirtualizedResources` under `<Capabilities>`.
 
+**Correction found during actual package creation:** the `windows.startupTask` extension's
+`Executable` attribute must be `$targetnametoken$.exe` — the same build-time token the
+auto-generated `<Application>` element already uses — not a hardcoded literal like
+`OncallAgent.exe`. A literal name produced this manifest validation failure at package-build time:
+`The file name "OncallAgent.exe" declared for element "...Extension..." doesn't exist in the
+package.` Only the token gets substituted with the entry-point project's real output name reliably;
+a hardcoded string that happens to match today's output name isn't treated the same way by the
+build pipeline's token-replacement step.
+
 - [ ] **Step 5a: Disable file-system write virtualization (added during final review; already done directly in the file, see Step 5)**
 
 By default, a packaged desktop app's writes to `%LOCALAPPDATA%` are redirected by Windows to a
