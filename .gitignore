@@ -7,3 +7,9 @@ publish/
 .vs/
 .env
 *.log
+
+# MSIX packaging build output (OncallAgent.Package) -- generated, not source
+OncallAgent.Package/AppPackages/
+OncallAgent.Package/BundleArtifacts/
+OncallAgent.Package/*.assets.cache
+OncallAgent.Package/*.Backup.tmp
