@@ -12,12 +12,13 @@
 
 - The existing unpackaged, self-contained single-file publish path (`dotnet publish ... -p:PublishSingleFile=true`, documented in README.md's "Run (production)" section) must keep working unmodified.
 - No new NuGet package dependencies. The registry provider is hand-written against `Microsoft.Win32.Registry`, already available on `net*-windows` TFMs.
-- `src/OncallAgent/OncallAgent.csproj`'s `TargetFramework` moves from `net10.0-windows` to `net10.0-windows10.0.19041.0` (required for the `Windows.ApplicationModel.StartupTask` WinRT projection). `test/OncallAgent.Tests/OncallAgent.Tests.csproj` stays on plain `net10.0-windows` — it never calls WinRT APIs directly.
+- `src/OncallAgent/OncallAgent.csproj`'s `TargetFramework` moves from `net10.0-windows` to `net10.0-windows10.0.19041.0` (required for the `Windows.ApplicationModel.StartupTask` WinRT projection). **Amended during final review:** `test/OncallAgent.Tests/OncallAgent.Tests.csproj` must track the same TargetFramework, not stay on plain `net10.0-windows` as originally stated here — a `ProjectReference` from a lower target-platform-version project to a higher one fails NuGet asset selection (`NU1201`), so this constraint was simply wrong. The human approved the bump after Task 1 surfaced it (see ledger).
 - Registry policy root: `HKLM\SOFTWARE\Policies\OncallBusyBarAgent`, one subkey per `appsettings.json` section (`Graph`, `Mic`, `BusyBar`), one registry value per config key within it.
-- Configuration precedence, lowest to highest: bundled `appsettings.json` → environment variables (existing default host behavior, unchanged) → `%LOCALAPPDATA%\oncall-busybar-agent\appsettings.json` → `HKLM\SOFTWARE\Policies\OncallBusyBarAgent`.
+- Configuration precedence, lowest to highest: bundled `appsettings.json` → `%LOCALAPPDATA%\oncall-busybar-agent\appsettings.json` → environment variables → command line → `HKLM\SOFTWARE\Policies\OncallBusyBarAgent`. **Amended during final review:** the LocalAppData file was originally specified to outrank environment variables, but since the bootstrap copies every key from the bundled defaults, that left no key for an env var to actually override — silently breaking the pre-existing, documented `Graph__ClientId`-style override path. The LocalAppData file now sits just above the bundled defaults (env vars/command line/registry policy still override it), matching the precedence convention `Host.CreateApplicationBuilder`'s own default chain already uses (file config < env vars < command line).
 - MSIX packaging targets x64 only. ARM64 and CI/CD submission automation are out of scope for this plan.
 - No changes to `OnCallStateEvaluator`, `GraphPresenceClient`, `MicrophoneActivityDetector`, or `BusyBarTimerController` — none of this touches on-call detection logic.
 - Existing `appsettings.json`'s `Graph:ClientId` value is already populated and does not need to change — it's already the shared default app referenced by the README's setup instructions.
+- **Added during final review:** once actually packaged (Task 5), Windows redirects new writes under `%LOCALAPPDATA%` to a private per-package folder unless the manifest opts out — see Task 5 Step 5a below. Without that, `UserConfigBootstrapper`'s writes would land somewhere other than the path README.md tells users to edit.
 
 ---
 
@@ -760,6 +761,47 @@ containing the startup task declaration, if `<Extensions>` doesn't already exist
 `TaskId="OncallBusyBarAgentStartup"` must match `PackagedStartupTaskManager.TaskId` from Task 1
 exactly (case-sensitive) — the WinRT `StartupTask.GetAsync` call in that class looks up the task by
 this string.
+
+- [ ] **Step 5a: Disable file-system write virtualization (added during final review)**
+
+By default, a packaged desktop app's writes to `%LOCALAPPDATA%` are redirected by Windows to a
+private per-package folder rather than the real path — which would silently break
+`UserConfigBootstrapper`'s LocalAppData file (Task 3) and every path in README.md's "Configure"
+section that tells users to edit `%LOCALAPPDATA%\oncall-busybar-agent\appsettings.json`. Opt out of
+that redirection so the packaged app uses the same real path the unpackaged build already does, in
+the same `<Package>` element edited in Step 5, alongside the existing `desktop`/`uap`/`rescap`
+namespace declarations:
+
+```xml
+<Package
+  xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
+  xmlns:desktop6="http://schemas.microsoft.com/appx/manifest/desktop/windows10/6"
+  IgnorableNamespaces="uap rescap desktop desktop6">
+```
+
+Add the capability under `<Capabilities>`:
+
+```xml
+<Capabilities>
+  <rescap:Capability Name="unvirtualizedResources" />
+</Capabilities>
+```
+
+And the property under `<Properties>`:
+
+```xml
+<Properties>
+  <desktop6:FileSystemWriteVirtualization>disabled</desktop6:FileSystemWriteVirtualization>
+</Properties>
+```
+
+(Merge these into whatever `<Capabilities>`/`<Properties>` elements the template already generated
+— don't duplicate the elements if they already exist.) Step 8 below (confirming the LocalAppData
+file's real path) depends on this being in place; if Store certification flags
+`unvirtualizedResources`, that's a signal to fall back to branching on
+`OncallAgent.Packaging.IPackagedAppContext.IsPackaged` and using WinRT `ApplicationData.Current.
+LocalFolder` instead — not attempted here since the manifest approach is simpler and sufficient for
+a full-trust Desktop Bridge app.
 
 - [ ] **Step 6: Build the packaging project**
 
