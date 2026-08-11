@@ -32,17 +32,45 @@ This app needs its own Entra app registration to sign in with. Register one in
 
 ## Configure
 
-Edit `src/OncallAgent/appsettings.json` (or set the equivalent environment variables,
-double underscore nesting, for example `Graph__ClientId`):
+Settings load in four layers, each overriding the one before it:
+
+1. The bundled `src/OncallAgent/appsettings.json` — factory defaults, including the shared
+   `Graph:ClientId` described above.
+2. Environment variables (double underscore nesting, for example `Graph__ClientId`).
+3. A per-user, writable copy at `%LOCALAPPDATA%\oncall-busybar-agent\appsettings.json`, created
+   automatically from the bundled defaults the first time the app runs. Edit this file — not the
+   one under `src/OncallAgent` — to change settings after that first run; it survives updates,
+   which the bundled file's location does not once the app is installed as an MSIX package.
+4. An IT-managed registry policy, for organizations deploying this via Intune or another MDM tool
+   — see "Managing settings via Intune or Group Policy" below. This always wins over the file
+   above.
 
 | Key | Default | Description |
 | --- | --- | --- |
-| `Graph:ClientId` | (none, required) | The Entra app's client ID from setup above. |
+| `Graph:ClientId` | (shared default) | The Entra app's (public) client ID. |
 | `Graph:TenantId` | `organizations` | Which tenants can sign in; matches the app registration's account type. |
 | `Graph:PollIntervalSeconds` | `30` | How often to poll presence and, when on a call, the calendar. |
 | `Mic:Enabled` | `true` | Whether the local microphone fallback runs at all. |
 | `Mic:PollIntervalSeconds` | `5` | How often to check local microphone activity. |
 | `BusyBar:Address` | `10.0.4.20` | Network address of the BUSY Bar device. |
+
+## Managing settings via Intune or Group Policy
+
+Any of the settings above can be locked down centrally by setting registry values under
+`HKLM\SOFTWARE\Policies\OncallBusyBarAgent`, one subkey per section:
+
+```
+HKLM\SOFTWARE\Policies\OncallBusyBarAgent\Graph      (values: ClientId, TenantId, PollIntervalSeconds)
+HKLM\SOFTWARE\Policies\OncallBusyBarAgent\Mic         (values: Enabled, PollIntervalSeconds)
+HKLM\SOFTWARE\Policies\OncallBusyBarAgent\BusyBar     (values: Address)
+```
+
+Set only the values you want to lock down — anything unset falls through to the user's own
+`appsettings.json`. `Enabled` should be set as a String value (`true` or `false`); the interval and
+address values can be a String or a DWORD, whichever your deployment tool makes easier. How the
+registry values get set is up to you: an Intune Settings Catalog custom OMA-URI profile, a Win32
+app deployment script, or plain Group Policy all work identically from this app's point of view —
+it only reads the registry, it doesn't care how the values arrived.
 
 ## Run (production)
 
@@ -76,6 +104,9 @@ warnings on first run and may be blocked outright by endpoint security policy in
 environments. If that's a problem for your organization, sign `OncallAgent.exe` with your own
 code-signing certificate (e.g. via `signtool sign`) as part of your build/deployment process —
 that's outside the scope of this repo.
+
+If this app is installed from the Microsoft Store as an MSIX package instead, this doesn't apply —
+the Store signs the package automatically as part of certification, at no cost.
 
 ## Development
 
