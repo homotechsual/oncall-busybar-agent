@@ -8,7 +8,7 @@ public static class UserConfigBootstrapper
 {
     public static void EnsureUserConfigExists(string bundledConfigPath, string userConfigPath)
     {
-        if (File.Exists(userConfigPath))
+        if (File.Exists(userConfigPath) || !File.Exists(bundledConfigPath))
         {
             return;
         }

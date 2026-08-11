@@ -36,6 +36,18 @@ public class UserConfigBootstrapperTests : IDisposable
         Assert.Equal("{\"BusyBar\":{\"Address\":\"192.168.1.1\"}}", File.ReadAllText(userPath));
     }
 
+    [Fact]
+    public void EnsureUserConfigExists_DoesNothing_WhenBundledConfigIsMissing()
+    {
+        Directory.CreateDirectory(_tempDir);
+        var bundledPath = Path.Combine(_tempDir, "does-not-exist.json");
+        var userPath = Path.Combine(_tempDir, "userdir", "appsettings.json");
+
+        UserConfigBootstrapper.EnsureUserConfigExists(bundledPath, userPath);
+
+        Assert.False(File.Exists(userPath));
+    }
+
     public void Dispose()
     {
         if (Directory.Exists(_tempDir))
