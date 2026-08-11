@@ -783,14 +783,25 @@ namespace declarations (`uap`, `rescap`, `desktop`, `desktop6`) all listed in `I
 an `<Extensions>` element under `<Application>` with the `windows.startupTask` declaration; and
 `unvirtualizedResources` under `<Capabilities>`.
 
-**Correction found during actual package creation:** the `windows.startupTask` extension's
-`Executable` attribute must be `$targetnametoken$.exe` — the same build-time token the
-auto-generated `<Application>` element already uses — not a hardcoded literal like
-`OncallAgent.exe`. A literal name produced this manifest validation failure at package-build time:
-`The file name "OncallAgent.exe" declared for element "...Extension..." doesn't exist in the
-package.` Only the token gets substituted with the entry-point project's real output name reliably;
-a hardcoded string that happens to match today's output name isn't treated the same way by the
-build pipeline's token-replacement step.
+**Corrected twice during actual package creation — this is the final, verified state.** The
+`windows.startupTask` extension's `Executable` attribute must be the literal real filename,
+`OncallAgent.exe` — **not** the `$targetnametoken$.exe` token. That token only gets substituted by
+Visual Studio's manifest-generation step for the auto-generated `<Application>` element itself; a
+custom `<Extension>` added by hand never gets that substitution, so using the token there just
+produces a manifest validation error citing the literal unresolved string `"$targetnametoken$.exe"`
+as a missing file (confirmed twice, byte-for-byte identical error both times).
+
+The real blocker turned out to be upstream of the manifest entirely: **before** the
+`<RuntimeIdentifiers>` fix (see the Global Constraints entry above) was applied to
+`OncallAgent.csproj`, *neither* the literal name *nor* the token worked, because no
+architecture-specific publish output existed for the packaging step to stage at all — "doesn't
+exist in the package" was literally true regardless of what string the manifest used. Once
+`RuntimeIdentifiers` was added and a real `win-x86`/`win-x64`/`win-arm64`-specific publish output
+started appearing (confirmed via the build log showing `...\bin\x86\Release\
+net10.0-windows10.0.19041.0\win-x86\msixpublish\`), the literal `OncallAgent.exe` name finally had a
+real file to match. **Sequencing matters if redoing this from scratch:** add `RuntimeIdentifiers`
+first, then use the literal exe name in the Extension — doing the manifest edit alone, in either
+form, cannot succeed without the RID fix in place first.
 
 - [ ] **Step 5a: Disable file-system write virtualization (added during final review; already done directly in the file, see Step 5)**
 
