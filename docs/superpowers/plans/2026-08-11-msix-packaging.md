@@ -700,7 +700,7 @@ everything in Tasks 1-4 is independent of it.
 **Interfaces:**
 - Consumes: `OncallAgent.Packaging.PackagedStartupTaskManager.TaskId` (Task 1) — the manifest's `TaskId` attribute (Step 5 below) must be the literal string `OncallBusyBarAgentStartup`, matching that constant exactly.
 
-- [ ] **Step 1: Add the packaging project**
+- [x] **Step 1: Add the packaging project**
 
 In Visual Studio 2022 (with the "Universal Windows Platform development" workload, or the "MSIX
 Packaging Tools" optional component under ".NET desktop development", installed), open
@@ -708,13 +708,13 @@ Packaging Tools" optional component under ".NET desktop development", installed)
 Application Packaging Project" → name it `OncallAgent.Package`, location at the repo root
 (sibling to `src`).
 
-- [ ] **Step 2: Set target/minimum version**
+- [x] **Step 2: Set target/minimum version**
 
 In the version dialog, set **Target Version** to the latest installed Windows SDK, and **Minimum
 Version** to at least **Windows 10, version 1809 (10.0; Build 17763)** or later (comfortably covers
 the `StartupTaskState.EnabledByPolicy` value used in Task 1, added in SDK 17134).
 
-- [ ] **Step 3: Reference the app project as the entry point (must be done via the Visual Studio UI, not a file edit)**
+- [x] **Step 3: Reference the app project as the entry point (must be done via the Visual Studio UI, not a file edit)**
 
 `OncallAgent.Package.wapproj` didn't end up with a project reference after Step 1's wizard. A first
 attempt at fixing this by hand-adding a plain `<ProjectReference Include="..\src\OncallAgent\
@@ -730,7 +730,7 @@ Then expand **Dependencies** → **Applications** and confirm `OncallAgent` is l
 entry point); if more than one project ends up listed, right-click `OncallAgent` → **Set as Entry
 Point**.
 
-- [ ] **Step 4: Wire up x86, x64, and ARM64 in the solution (amended per human request after final review — rewritten against the actual file state, not assumed)**
+- [x] **Step 4: Wire up x86, x64, and ARM64 in the solution (amended per human request after final review — rewritten against the actual file state, not assumed)**
 
 Reading the real files after Step 1 revealed the gap: `OncallAgent.sln` already has `x86` and `x64`
 solution platforms (from before this plan existed), but every single one of `OncallAgent`'s
@@ -769,7 +769,7 @@ just have the option exist. Do this in **Build → Configuration Manager**:
    Release|Any CPU` — this is the one-line signature of the bug this step exists to fix, so it's a
    fast way to confirm it actually took.
 
-- [ ] **Step 5: Add the startup task extension to the manifest (already done directly in the file)**
+- [x] **Step 5: Add the startup task extension to the manifest (already done directly in the file)**
 
 `Package.appxmanifest` has had the `desktop`/`desktop6` namespace declarations, the
 `windows.startupTask` extension (`TaskId="OncallBusyBarAgentStartup"`, matching
@@ -817,7 +817,7 @@ package-relative path rather than assuming either a literal name or the token �
 to be true for every WAP project/SDK version, so confirm it directly rather than copying this value
 blindly.
 
-- [ ] **Step 5a: Disable file-system write virtualization (added during final review; already done directly in the file, see Step 5)**
+- [x] **Step 5a: Disable file-system write virtualization (added during final review; already done directly in the file, see Step 5)**
 
 By default, a packaged desktop app's writes to `%LOCALAPPDATA%` are redirected by Windows to a
 private per-package folder rather than the real path — which would silently break
@@ -832,14 +832,14 @@ Store certification flags `unvirtualizedResources`, that's a signal to fall back
 LocalFolder` instead — not attempted here since the manifest approach is simpler and sufficient for
 a full-trust Desktop Bridge app.
 
-- [ ] **Step 6: Build the packaging project for each architecture**
+- [x] **Step 6: Build the packaging project for each architecture**
 
 Set `OncallAgent.Package` as the startup project (right-click → **Set as StartUp Project**), then
 for each of `x86`, `x64`, and `ARM64` in turn: select the `Release`/(architecture) configuration,
 **Build** → **Build OncallAgent.Package**, confirm no errors. If any one fails complaining about
 mismatched platforms, revisit Step 4 for that specific architecture.
 
-- [ ] **Step 7: Produce and install a local test package (amended per human request after final review)**
+- [x] **Step 7: Produce and install a local test package (amended per human request after final review)**
 
 Right-click `OncallAgent.Package` → **Publish** → **Create App Packages...** → choose
 **Sideloading** (not Store, for this first local test) → in the **Select and Configure Packages**
@@ -885,7 +885,7 @@ With the sideloaded package installed and running:
   support done, since this is the one architecture-specific behavior difference nothing else in
   this plan exercises.
 
-- [ ] **Step 9: Commit**
+- [x] **Step 9: Commit**
 
 ```bash
 git add OncallAgent.sln OncallAgent.Package/
