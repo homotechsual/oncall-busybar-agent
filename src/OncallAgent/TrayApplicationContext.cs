@@ -50,30 +50,9 @@ public sealed class TrayApplicationContext : ApplicationContext
         menu.Items.Add("Sign out", null, async (_, _) => await SignOutAsync().ConfigureAwait(true));
         menu.Items.Add("Pause", null, (_, _) => _pollingPaused = !_pollingPaused);
 
-        var startupItem = new ToolStripMenuItem("Start with Windows")
-        {
-            CheckOnClick = true,
-            Checked = _startupShortcutManager.IsEnabled()
-        };
-        startupItem.CheckedChanged += (_, _) =>
-        {
-            try
-            {
-                if (startupItem.Checked)
-                {
-                    _startupShortcutManager.Enable();
-                }
-                else
-                {
-                    _startupShortcutManager.Disable();
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "Failed to update startup shortcut.");
-            }
-        };
+        var startupItem = new ToolStripMenuItem("Start with Windows") { CheckOnClick = true };
         menu.Items.Add(startupItem);
+        _ = InitializeStartupItemAsync(startupItem);
 
         menu.Items.Add("Exit", null, (_, _) => ExitThread());
 
@@ -206,6 +185,37 @@ public sealed class TrayApplicationContext : ApplicationContext
         {
             _graphTimer.Stop();
         }
+    }
+
+    private async Task InitializeStartupItemAsync(ToolStripMenuItem startupItem)
+    {
+        try
+        {
+            startupItem.Checked = await _startupShortcutManager.IsEnabledAsync().ConfigureAwait(true);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to read startup shortcut state.");
+        }
+
+        startupItem.CheckedChanged += async (_, _) =>
+        {
+            try
+            {
+                if (startupItem.Checked)
+                {
+                    await _startupShortcutManager.EnableAsync().ConfigureAwait(true);
+                }
+                else
+                {
+                    await _startupShortcutManager.DisableAsync().ConfigureAwait(true);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to update startup shortcut.");
+            }
+        };
     }
 
     protected override void Dispose(bool disposing)

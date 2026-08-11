@@ -19,9 +19,9 @@ public sealed class StartupShortcutManager : IStartupShortcutManager
     private static string ShortcutPath =>
         Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Startup), ShortcutFileName);
 
-    public bool IsEnabled() => File.Exists(ShortcutPath);
+    public Task<bool> IsEnabledAsync() => Task.FromResult(File.Exists(ShortcutPath));
 
-    public void Enable()
+    public Task EnableAsync()
     {
         var shellLink = (IShellLinkW)new ShellLink();
         shellLink.SetPath(Application.ExecutablePath);
@@ -29,14 +29,16 @@ public sealed class StartupShortcutManager : IStartupShortcutManager
         shellLink.SetDescription("BUSY Bar on call agent");
 
         ((IPersistFile)shellLink).Save(ShortcutPath, true);
+        return Task.CompletedTask;
     }
 
-    public void Disable()
+    public Task DisableAsync()
     {
         if (File.Exists(ShortcutPath))
         {
             File.Delete(ShortcutPath);
         }
+        return Task.CompletedTask;
     }
 }
 

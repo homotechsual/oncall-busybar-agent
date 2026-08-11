@@ -11,22 +11,23 @@ public sealed class PackagedStartupTaskManager : IStartupShortcutManager
 {
     public const string TaskId = "OncallBusyBarAgentStartup";
 
-    public bool IsEnabled()
+    public async Task<bool> IsEnabledAsync()
     {
-        var task = GetTask();
+        var task = await GetTaskAsync().ConfigureAwait(false);
         return task.State is StartupTaskState.Enabled or StartupTaskState.EnabledByPolicy;
     }
 
-    public void Enable()
+    public async Task EnableAsync()
     {
-        GetTask().RequestEnableAsync().AsTask().GetAwaiter().GetResult();
+        var task = await GetTaskAsync().ConfigureAwait(false);
+        await task.RequestEnableAsync().AsTask().ConfigureAwait(false);
     }
 
-    public void Disable()
+    public async Task DisableAsync()
     {
-        GetTask().Disable();
+        var task = await GetTaskAsync().ConfigureAwait(false);
+        task.Disable();
     }
 
-    private static StartupTask GetTask() =>
-        StartupTask.GetAsync(TaskId).AsTask().GetAwaiter().GetResult();
+    private static Task<StartupTask> GetTaskAsync() => StartupTask.GetAsync(TaskId).AsTask();
 }
