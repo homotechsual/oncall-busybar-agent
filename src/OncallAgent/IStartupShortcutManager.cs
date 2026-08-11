@@ -2,7 +2,7 @@ namespace OncallAgent;
 
 public interface IStartupShortcutManager
 {
-    bool IsEnabled();
-    void Enable();
-    void Disable();
+    Task<bool> IsEnabledAsync();
+    Task EnableAsync();
+    Task DisableAsync();
 }
