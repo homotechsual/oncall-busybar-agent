@@ -2,6 +2,7 @@ using Busy.Bar;
 using OncallAgent;
 using OncallAgent.Graph;
 using OncallAgent.Mic;
+using OncallAgent.Packaging;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
@@ -43,7 +44,11 @@ builder.Services.AddSingleton(provider =>
     return new BusyBar(new Busy.Bar.BusyBarOptions { Addr = options.Address });
 });
 builder.Services.AddSingleton<BusyBarTimerController>();
-builder.Services.AddSingleton<IStartupShortcutManager, StartupShortcutManager>();
+builder.Services.AddSingleton<IPackagedAppContext, PackagedAppContext>();
+builder.Services.AddSingleton<IStartupShortcutManager>(provider =>
+    provider.GetRequiredService<IPackagedAppContext>().IsPackaged
+        ? new PackagedStartupTaskManager()
+        : new StartupShortcutManager());
 builder.Services.AddSingleton<TrayApplicationContext>();
 
 var host = builder.Build();
