@@ -5,6 +5,7 @@ using OncallAgent.Graph;
 using OncallAgent.Mic;
 using OncallAgent.Packaging;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Configuration.EnvironmentVariables;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
@@ -39,9 +40,20 @@ try
     UserConfigBootstrapper.EnsureUserConfigExists(
         Path.Combine(AppContext.BaseDirectory, "appsettings.json"),
         userConfigPath);
-    builder.Configuration
-        .AddJsonFile(userConfigPath, optional: true, reloadOnChange: false)
-        .AddOncallAgentPolicyOverrides();
+    // Insert right before the environment-variables source (already added by Host.CreateApplicationBuilder's
+    // defaults) rather than appending, so env vars and command-line args still override this file — appending
+    // would rank this above them, and since it's a full copy of every key, that left nothing for a lower layer
+    // to actually override.
+    builder.Configuration.AddJsonFile(userConfigPath, optional: true, reloadOnChange: false);
+    var userConfigSource = builder.Configuration.Sources[^1];
+    builder.Configuration.Sources.Remove(userConfigSource);
+    var envVarsIndex = builder.Configuration.Sources
+        .Select((source, index) => (source, index))
+        .First(pair => pair.source is EnvironmentVariablesConfigurationSource)
+        .index;
+    builder.Configuration.Sources.Insert(envVarsIndex, userConfigSource);
+
+    builder.Configuration.AddOncallAgentPolicyOverrides();
 
     builder.Services.AddOptions<GraphOptions>()
         .Bind(builder.Configuration.GetSection(GraphOptions.SectionName))
