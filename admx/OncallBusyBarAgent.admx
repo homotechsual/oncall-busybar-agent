@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Administrative template for oncall-busybar-agent. Targets the exact registry schema
+  RegistryConfigurationProvider reads (src/OncallAgent/Config/RegistryConfigurationProvider.cs,
+  Win32PolicyRegistryReader.cs): HKLM\SOFTWARE\Policies\OncallBusyBarAgent\Section, one value per
+  appsettings.json key. Authoring this file changes nothing about how the app reads config, it's
+  purely a friendlier UI for setting the same registry values Intune's Settings Catalog custom
+  OMA-URI profiles or a plain script can already set. See README.md's "Managing settings via Intune
+  or Group Policy" section.
+
+  Each setting is its own policy (not grouped into one) so IT can lock down any single setting
+  independently, matching the app's own "set only what you want to lock down, else falls through"
+  precedence model; grouping multiple values into one policy would force all-or-nothing.
+
+  Mic_Enabled writes literal "true"/"false" strings via trueValue/falseValue, not the default
+  REG_DWORD 1/0 a plain boolean element writes; the provider does not parse "1"/"0" as a
+  bool (see README's registry table note), so this override is required, not stylistic.
+-->
+<policyDefinitions revision="1.0" schemaVersion="1.0">
+  <policyNamespaces>
+    <target prefix="oncallbusybaragent" namespace="homotechsual.Policies.OncallBusyBarAgent" />
+  </policyNamespaces>
+  <resources minRequiredRevision="1.0" />
+  <supportedOn>
+    <definitions>
+      <definition name="SUPPORTED_OncallBusyBarAgent" displayName="$(string.SUPPORTED_OncallBusyBarAgent)" />
+    </definitions>
+  </supportedOn>
+  <categories>
+    <category name="OncallBusyBarAgent" displayName="$(string.OncallBusyBarAgent)" />
+    <category name="OncallBusyBarAgent_Graph" displayName="$(string.OncallBusyBarAgent_Graph)">
+      <parentCategory ref="OncallBusyBarAgent" />
+    </category>
+    <category name="OncallBusyBarAgent_Mic" displayName="$(string.OncallBusyBarAgent_Mic)">
+      <parentCategory ref="OncallBusyBarAgent" />
+    </category>
+    <category name="OncallBusyBarAgent_BusyBar" displayName="$(string.OncallBusyBarAgent_BusyBar)">
+      <parentCategory ref="OncallBusyBarAgent" />
+    </category>
+  </categories>
+  <policies>
+
+    <policy name="OncallBusyBarAgent_Graph_ClientId"
+            class="Machine"
+            displayName="$(string.Graph_ClientId)"
+            explainText="$(string.Graph_ClientId_Explain)"
+            key="SOFTWARE\Policies\OncallBusyBarAgent\Graph"
+            presentation="$(presentation.Graph_ClientId)">
+      <parentCategory ref="OncallBusyBarAgent_Graph" />
+      <supportedOn ref="SUPPORTED_OncallBusyBarAgent" />
+      <elements>
+        <text id="Graph_ClientId_Text" valueName="ClientId" required="true" />
+      </elements>
+    </policy>
+
+    <policy name="OncallBusyBarAgent_Graph_TenantId"
+            class="Machine"
+            displayName="$(string.Graph_TenantId)"
+            explainText="$(string.Graph_TenantId_Explain)"
+            key="SOFTWARE\Policies\OncallBusyBarAgent\Graph"
+            presentation="$(presentation.Graph_TenantId)">
+      <parentCategory ref="OncallBusyBarAgent_Graph" />
+      <supportedOn ref="SUPPORTED_OncallBusyBarAgent" />
+      <elements>
+        <text id="Graph_TenantId_Text" valueName="TenantId" required="true" />
+      </elements>
+    </policy>
+
+    <policy name="OncallBusyBarAgent_Graph_PollIntervalSeconds"
+            class="Machine"
+            displayName="$(string.Graph_PollIntervalSeconds)"
+            explainText="$(string.Graph_PollIntervalSeconds_Explain)"
+            key="SOFTWARE\Policies\OncallBusyBarAgent\Graph"
+            presentation="$(presentation.Graph_PollIntervalSeconds)">
+      <parentCategory ref="OncallBusyBarAgent_Graph" />
+      <supportedOn ref="SUPPORTED_OncallBusyBarAgent" />
+      <elements>
+        <decimal id="Graph_PollIntervalSeconds_Decimal" valueName="PollIntervalSeconds" required="true" minValue="1" maxValue="86400" />
+      </elements>
+    </policy>
+
+    <policy name="OncallBusyBarAgent_Mic_Enabled"
+            class="Machine"
+            displayName="$(string.Mic_Enabled)"
+            explainText="$(string.Mic_Enabled_Explain)"
+            key="SOFTWARE\Policies\OncallBusyBarAgent\Mic"
+            presentation="$(presentation.Mic_Enabled)">
+      <parentCategory ref="OncallBusyBarAgent_Mic" />
+      <supportedOn ref="SUPPORTED_OncallBusyBarAgent" />
+      <elements>
+        <boolean id="Mic_Enabled_Bool" valueName="Enabled">
+          <trueValue>
+            <string>true</string>
+          </trueValue>
+          <falseValue>
+            <string>false</string>
+          </falseValue>
+        </boolean>
+      </elements>
+    </policy>
+
+    <policy name="OncallBusyBarAgent_Mic_PollIntervalSeconds"
+            class="Machine"
+            displayName="$(string.Mic_PollIntervalSeconds)"
+            explainText="$(string.Mic_PollIntervalSeconds_Explain)"
+            key="SOFTWARE\Policies\OncallBusyBarAgent\Mic"
+            presentation="$(presentation.Mic_PollIntervalSeconds)">
+      <parentCategory ref="OncallBusyBarAgent_Mic" />
+      <supportedOn ref="SUPPORTED_OncallBusyBarAgent" />
+      <elements>
+        <decimal id="Mic_PollIntervalSeconds_Decimal" valueName="PollIntervalSeconds" required="true" minValue="1" maxValue="3600" />
+      </elements>
+    </policy>
+
+    <policy name="OncallBusyBarAgent_BusyBar_Address"
+            class="Machine"
+            displayName="$(string.BusyBar_Address)"
+            explainText="$(string.BusyBar_Address_Explain)"
+            key="SOFTWARE\Policies\OncallBusyBarAgent\BusyBar"
+            presentation="$(presentation.BusyBar_Address)">
+      <parentCategory ref="OncallBusyBarAgent_BusyBar" />
+      <supportedOn ref="SUPPORTED_OncallBusyBarAgent" />
+      <elements>
+        <text id="BusyBar_Address_Text" valueName="Address" required="true" />
+      </elements>
+    </policy>
+
+  </policies>
+</policyDefinitions>

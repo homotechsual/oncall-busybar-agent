@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<policyDefinitionResources revision="1.0" schemaVersion="1.0">
+  <displayName>BUSY Bar on call agent policies</displayName>
+  <description>Administrative template for managing oncall-busybar-agent settings via Group Policy or Intune.</description>
+  <resources>
+    <stringTable>
+      <string id="SUPPORTED_OncallBusyBarAgent">Windows 10 or later</string>
+      <string id="OncallBusyBarAgent">BUSY Bar on call agent</string>
+      <string id="OncallBusyBarAgent_Graph">Microsoft Graph sign-in</string>
+      <string id="OncallBusyBarAgent_Mic">Microphone fallback</string>
+      <string id="OncallBusyBarAgent_BusyBar">BUSY Bar device</string>
+
+      <string id="Graph_ClientId">Entra app client ID</string>
+      <string id="Graph_ClientId_Explain">The client ID of the Entra app registration the agent signs in with. Set this only if you're using your own Entra app registration instead of the shared default one documented in the app's README. If not configured here, the value from the user's local appsettings.json (or the bundled default) is used instead.</string>
+
+      <string id="Graph_TenantId">Entra tenant restriction</string>
+      <string id="Graph_TenantId_Explain">Which Microsoft Entra tenants are allowed to sign in: "organizations" for any work or school account, or a specific tenant ID or domain to restrict sign-in to one organization. Should match the account type configured on the Entra app registration. If not configured here, the value from the user's local appsettings.json (or the bundled default of "organizations") is used instead.</string>
+
+      <string id="Graph_PollIntervalSeconds">Presence poll interval (seconds)</string>
+      <string id="Graph_PollIntervalSeconds_Explain">How often, in seconds, the agent polls Microsoft Graph for presence and, when on a call, calendar data. If not configured here, the value from the user's local appsettings.json (or the bundled default of 30 seconds) is used instead.</string>
+
+      <string id="Mic_Enabled">Enable microphone fallback</string>
+      <string id="Mic_Enabled_Explain">Whether the agent falls back to local microphone activity to detect calls that Microsoft Graph presence misses. If not configured here, the value from the user's local appsettings.json (or the bundled default of enabled) is used instead.</string>
+
+      <string id="Mic_PollIntervalSeconds">Microphone poll interval (seconds)</string>
+      <string id="Mic_PollIntervalSeconds_Explain">How often, in seconds, the agent checks local microphone activity when the microphone fallback is enabled. If not configured here, the value from the user's local appsettings.json (or the bundled default of 5 seconds) is used instead.</string>
+
+      <string id="BusyBar_Address">BUSY Bar device address</string>
+      <string id="BusyBar_Address_Explain">The network address (hostname or IP) of the physical BUSY Bar device the agent controls. If not configured here, the value from the user's local appsettings.json (or the bundled default) is used instead.</string>
+    </stringTable>
+    <presentationTable>
+      <presentation id="Graph_ClientId">
+        <textBox refId="Graph_ClientId_Text">
+          <label>Client ID:</label>
+        </textBox>
+      </presentation>
+      <presentation id="Graph_TenantId">
+        <textBox refId="Graph_TenantId_Text">
+          <label>Tenant ID or "organizations":</label>
+        </textBox>
+      </presentation>
+      <presentation id="Graph_PollIntervalSeconds">
+        <decimalTextBox refId="Graph_PollIntervalSeconds_Decimal" defaultValue="30">Seconds:</decimalTextBox>
+      </presentation>
+      <presentation id="Mic_Enabled">
+        <checkBox refId="Mic_Enabled_Bool" defaultChecked="true">Enable microphone fallback</checkBox>
+      </presentation>
+      <presentation id="Mic_PollIntervalSeconds">
+        <decimalTextBox refId="Mic_PollIntervalSeconds_Decimal" defaultValue="5">Seconds:</decimalTextBox>
+      </presentation>
+      <presentation id="BusyBar_Address">
+        <textBox refId="BusyBar_Address_Text">
+          <label>Device address:</label>
+        </textBox>
+      </presentation>
+    </presentationTable>
+  </resources>
+</policyDefinitionResources>
