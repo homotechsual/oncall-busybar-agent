@@ -15,7 +15,7 @@
 - `src/OncallAgent/OncallAgent.csproj`'s `TargetFramework` moves from `net10.0-windows` to `net10.0-windows10.0.19041.0` (required for the `Windows.ApplicationModel.StartupTask` WinRT projection). **Amended during final review:** `test/OncallAgent.Tests/OncallAgent.Tests.csproj` must track the same TargetFramework, not stay on plain `net10.0-windows` as originally stated here — a `ProjectReference` from a lower target-platform-version project to a higher one fails NuGet asset selection (`NU1201`), so this constraint was simply wrong. The human approved the bump after Task 1 surfaced it (see ledger).
 - Registry policy root: `HKLM\SOFTWARE\Policies\OncallBusyBarAgent`, one subkey per `appsettings.json` section (`Graph`, `Mic`, `BusyBar`), one registry value per config key within it.
 - Configuration precedence, lowest to highest: bundled `appsettings.json` → `%LOCALAPPDATA%\oncall-busybar-agent\appsettings.json` → environment variables → command line → `HKLM\SOFTWARE\Policies\OncallBusyBarAgent`. **Amended during final review:** the LocalAppData file was originally specified to outrank environment variables, but since the bootstrap copies every key from the bundled defaults, that left no key for an env var to actually override — silently breaking the pre-existing, documented `Graph__ClientId`-style override path. The LocalAppData file now sits just above the bundled defaults (env vars/command line/registry policy still override it), matching the precedence convention `Host.CreateApplicationBuilder`'s own default chain already uses (file config < env vars < command line).
-- MSIX packaging targets x64 only. ARM64 and CI/CD submission automation are out of scope for this plan.
+- **Amended per human request after final review:** MSIX packaging targets x86, x64, **and** ARM64 (not x64 only as originally scoped) — see Task 5 Steps 2, 4, and 7 below, all updated for three architectures. CI/CD submission automation remains out of scope for this plan.
 - No changes to `OnCallStateEvaluator`, `GraphPresenceClient`, `MicrophoneActivityDetector`, or `BusyBarTimerController` — none of this touches on-call detection logic.
 - Existing `appsettings.json`'s `Graph:ClientId` value is already populated and does not need to change — it's already the shared default app referenced by the README's setup instructions.
 - **Added during final review:** once actually packaged (Task 5), Windows redirects new writes under `%LOCALAPPDATA%` to a private per-package folder unless the manifest opts out — see Task 5 Step 5a below. Without that, `UserConfigBootstrapper`'s writes would land somewhere other than the path README.md tells users to edit.
@@ -720,12 +720,20 @@ Reference** → check `OncallAgent` → OK. If more than one application ends up
 packaging project's **Applications** node, right-click `OncallAgent` → **Set as Entry Point** (with
 only one referenced project this is usually already the case).
 
-- [ ] **Step 4: Fix x64 configuration**
+- [ ] **Step 4: Configure x86, x64, and ARM64 platforms (amended per human request after final review)**
 
-Open **Build** → **Configuration Manager**. Confirm both `OncallAgent.Package` and `OncallAgent`
-have an `x64` platform entry (add one via the **Platform** dropdown → **New...** → `x64`, copying
-settings from `Any CPU`, if it's missing) and that `OncallAgent.Package`'s Release|x64 configuration
-builds `OncallAgent`'s Release|x64 (not Release|Any CPU).
+MSIX packages (unlike a plain "Any CPU" exe) are tied to one concrete processor architecture each,
+so Windows/the Store can hand the right package to the right device — this plan now targets all
+three Windows desktop architectures rather than x64 only, per Microsoft's own recommendation to
+build for every architecture to reach the widest range of devices.
+
+Open **Build** → **Configuration Manager**. For each of `x86`, `x64`, and `ARM64`: add a platform
+entry via the **Platform** dropdown → **New...** → (architecture), copying settings from `Any CPU`,
+if it's missing — for **both** `OncallAgent.Package` and `OncallAgent`. Then confirm, for every one
+of the three, that `OncallAgent.Package`'s Release|(architecture) configuration builds
+`OncallAgent`'s Release|(architecture) — not Release|Any CPU. This is the same "silently still
+building Any CPU underneath" gotcha regardless of which architecture you're checking, so verify all
+three individually rather than assuming the same fix carries over.
 
 - [ ] **Step 5: Add the startup task extension to the manifest**
 
@@ -803,19 +811,25 @@ file's real path) depends on this being in place; if Store certification flags
 LocalFolder` instead — not attempted here since the manifest approach is simpler and sufficient for
 a full-trust Desktop Bridge app.
 
-- [ ] **Step 6: Build the packaging project**
+- [ ] **Step 6: Build the packaging project for each architecture**
 
-Set `OncallAgent.Package` as the startup project (right-click → **Set as StartUp Project**), select
-the `Release`/`x64` configuration, then **Build** → **Build OncallAgent.Package**. Confirm no
-errors. If it fails complaining about mismatched platforms, revisit Step 4.
+Set `OncallAgent.Package` as the startup project (right-click → **Set as StartUp Project**), then
+for each of `x86`, `x64`, and `ARM64` in turn: select the `Release`/(architecture) configuration,
+**Build** → **Build OncallAgent.Package**, confirm no errors. If any one fails complaining about
+mismatched platforms, revisit Step 4 for that specific architecture.
 
-- [ ] **Step 7: Produce and install a local test package**
+- [ ] **Step 7: Produce and install a local test package (amended per human request after final review)**
 
 Right-click `OncallAgent.Package` → **Publish** → **Create App Packages...** → choose
-**Sideloading** (not Store, for this first local test) → follow the wizard (a self-signed test
-certificate is fine here) → **Create**. Enable **Developer Mode** in Windows Settings if not
-already on, then install the produced `.msix` from the output folder (double-click it, or
-`Add-AppxPackage -Path <path>.msix` in PowerShell).
+**Sideloading** (not Store, for this first local test) → in the **Select and Configure Packages**
+step, check all three architecture boxes (**x86**, **x64**, **ARM64**) rather than just one, and set
+**Generate app bundle** to **Always** — this produces a single `.msixbundle` containing all three
+architecture-specific packages, and Windows installs whichever one matches the target device →
+follow the rest of the wizard (a self-signed test certificate is fine here) → **Create**. Enable
+**Developer Mode** in Windows Settings if not already on, then install the produced `.msixbundle`
+(double-click it, or `Add-AppxPackage -Path <path>.msixbundle` in PowerShell) — on whichever
+architecture machine you're testing from; installing a bundle automatically picks the matching
+package inside it.
 
 - [ ] **Step 8: Verify packaged behavior end-to-end**
 
@@ -829,6 +843,14 @@ With the sideloaded package installed and running:
   (change `BusyBar:Address` there, restart the app, confirm the new address takes effect) —
   confirming Task 3's config bootstrap works under real package identity, not just under
   `dotnet run`.
+- **If an ARM64 device or the ARM64 Windows emulator is available, test interactive sign-in there
+  specifically** (added per human request after final review): this app's MSAL WAM broker
+  (`Microsoft.Identity.Client.Broker`) has a native component whose current ARM64 support wasn't
+  confirmed while planning this. If the broker isn't available on that architecture, MSAL's
+  documented behavior is to fall back to a system-browser sign-in automatically rather than fail
+  outright — but confirm sign-in actually completes one way or the other before considering ARM64
+  support done, since this is the one architecture-specific behavior difference nothing else in
+  this plan exercises.
 
 - [ ] **Step 9: Commit**
 
