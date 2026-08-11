@@ -713,15 +713,21 @@ In the version dialog, set **Target Version** to the latest installed Windows SD
 Version** to at least **Windows 10, version 1809 (10.0; Build 17763)** or later (comfortably covers
 the `StartupTaskState.EnabledByPolicy` value used in Task 1, added in SDK 17134).
 
-- [ ] **Step 3: Reference the app project as the entry point (already done directly in the file)**
+- [ ] **Step 3: Reference the app project as the entry point (must be done via the Visual Studio UI, not a file edit)**
 
-`OncallAgent.Package.wapproj` didn't end up with a project reference after Step 1's wizard — a
-plain `<ProjectReference Include="..\src\OncallAgent\OncallAgent.csproj" />` ItemGroup has been
-added directly to the file (a well-defined, VS-version-independent bit of MSBuild XML, safe to
-hand-edit unlike the `.sln` platform matrix in Step 4 below). In Solution Explorer, confirm
-`OncallAgent.Package` → **Dependencies** now shows `OncallAgent` — if VS still doesn't show it after
-reloading the project, right-click **Dependencies** → **Add Project Reference** → check `OncallAgent`
-→ OK as a fallback.
+`OncallAgent.Package.wapproj` didn't end up with a project reference after Step 1's wizard. A first
+attempt at fixing this by hand-adding a plain `<ProjectReference Include="..\src\OncallAgent\
+OncallAgent.csproj" />` ItemGroup directly to the file did **not** work — Visual Studio still showed
+"Project must have a reference to an application. Please add a reference under the 'Applications'
+node in the Solution Explorer," even with the reference correctly positioned before the
+`Microsoft.DesktopBridge.targets` import. Whatever VS's own **Add Project Reference** dialog does to
+populate the packaging project's **Applications** node evidently isn't fully captured by a plain
+`<ProjectReference>` element — this plan doesn't know the exact extra metadata involved, so use the
+dialog itself rather than another hand-edit attempt: in Solution Explorer, right-click
+`OncallAgent.Package` → **Dependencies** → **Add Project Reference...** → check `OncallAgent` → OK.
+Then expand **Dependencies** → **Applications** and confirm `OncallAgent` is listed there (bold =
+entry point); if more than one project ends up listed, right-click `OncallAgent` → **Set as Entry
+Point**.
 
 - [ ] **Step 4: Wire up x86, x64, and ARM64 in the solution (amended per human request after final review — rewritten against the actual file state, not assumed)**
 
