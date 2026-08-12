@@ -20,7 +20,7 @@ Settings load in four layers, each overriding the one before it:
 | --- | --- | --- |
 | `Graph:ClientId` | (shared default) | The Entra app's (public) client ID. |
 | `Graph:TenantId` | `organizations` | Which tenants can sign in; matches the app registration's account type. |
-| `Graph:PollIntervalSeconds` | `30` | How often to poll presence and, when on a call, the calendar. |
+| `Graph:PollIntervalSeconds` | `30` | How often to poll presence and the calendar (both are polled together on every cycle). |
 | `Mic:Enabled` | `true` | Whether the local microphone fallback runs at all. |
 | `Mic:PollIntervalSeconds` | `5` | How often to check local microphone activity. |
 | `BusyBar:Address` | `10.0.4.20` | Network address of the BUSY Bar device. |
