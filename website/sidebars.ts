@@ -1,7 +1,7 @@
 import type {SidebarsConfig} from '@docusaurus/plugin-content-docs';
 
 const sidebars: SidebarsConfig = {
-  docsSidebar: ['intro', 'configuration', 'intune-group-policy', 'privacy'],
+  docsSidebar: ['intro', 'configuration', 'intune-group-policy', 'running', 'privacy', 'development'],
 };
 
 export default sidebars;

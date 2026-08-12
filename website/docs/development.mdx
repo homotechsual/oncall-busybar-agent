@@ -1,0 +1,22 @@
+---
+sidebar_position: 6
+---
+
+# Development
+
+```bash
+dotnet build OncallAgent.sln
+dotnet test OncallAgent.sln
+dotnet run --project src/OncallAgent/OncallAgent.csproj
+```
+
+Or run the debug build's exe directly (also console-free, unlike `dotnet run`):
+
+```bash
+src\OncallAgent\bin\Debug\net10.0-windows\OncallAgent.exe
+```
+
+Don't use `dotnet run` for normal/production use: it always launches through the `dotnet` CLI's
+own console host, so a console window stays open and attached for as long as the app runs,
+whatever the target's own output type is. `dotnet run` is fine for development iteration, where
+having that console around for log output is actually useful.

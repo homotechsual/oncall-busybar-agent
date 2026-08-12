@@ -81,6 +81,7 @@ const config: Config = {
             {label: 'Getting Started', to: '/'},
             {label: 'Configuration', to: '/configuration'},
             {label: 'Intune / Group Policy', to: '/intune-group-policy'},
+            {label: 'Running in production', to: '/running'},
             {label: 'Privacy', to: '/privacy'},
           ],
         },
