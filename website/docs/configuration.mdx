@@ -6,15 +6,15 @@ sidebar_position: 3
 
 Settings load in four layers, each overriding the one before it:
 
-1. The bundled `src/OncallAgent/appsettings.json` — factory defaults, including the shared
+1. The bundled `src/OncallAgent/appsettings.json`: factory defaults, including the shared
    `Graph:ClientId` described in [Sign in](/#sign-in).
 2. Environment variables (double underscore nesting, for example `Graph__ClientId`).
 3. A per-user, writable copy at `%LOCALAPPDATA%\oncall-busybar-agent\appsettings.json`, created
-   automatically from the bundled defaults the first time the app runs. Edit this file — not the
-   one under `src/OncallAgent` — to change settings after that first run; it survives updates,
+   automatically from the bundled defaults the first time the app runs. Edit this file (not the
+   one under `src/OncallAgent`) to change settings after that first run; it survives updates,
    which the bundled file's location does not once the app is installed as an MSIX package.
-4. An IT-managed registry policy, for organizations deploying this via Intune or another MDM tool
-   — see [Intune / Group Policy](/intune-group-policy). This always wins over the file above.
+4. An IT-managed registry policy, for organizations deploying this via Intune or another MDM tool.
+   See [Intune / Group Policy](/intune-group-policy). This always wins over the file above.
 
 | Key | Default | Description |
 | --- | --- | --- |

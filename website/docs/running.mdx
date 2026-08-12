@@ -14,7 +14,7 @@ dotnet publish src\OncallAgent\OncallAgent.csproj -c Release -r win-x64 --self-c
 
 > If this fails with `MSB3094: "DestinationFiles" refers to 1 item(s), and "SourceFiles" refers
 > to N item(s)`, the repo (or the `-o` output path) is sitting under a Windows user profile
-> folder whose name contains an apostrophe (`C:\Users\O'Brien\...`) — the .NET SDK's publish
+> folder whose name contains an apostrophe (`C:\Users\O'Brien\...`). The .NET SDK's publish
 > targets mis-batch file copies when an apostrophe appears anywhere in the path. Publish from
 > (or to) a path without one, e.g. `-o C:\publish\oncall-busybar-agent`.
 
@@ -34,8 +34,8 @@ Unchecking it removes the shortcut.
 The published exe is unsigned. Unsigned executables commonly trigger SmartScreen warnings on
 first run and may be blocked outright by endpoint security policy in managed environments. If
 that's a problem for your organization, sign `OncallAgent.exe` with your own code-signing
-certificate (e.g. via `signtool sign`) as part of your build/deployment process — that's outside
+certificate (e.g. via `signtool sign`) as part of your build/deployment process. That's outside
 the scope of this repo.
 
-If this app is installed from the Microsoft Store as an MSIX package instead, this doesn't apply
-— the Store signs the package automatically as part of certification, at no cost.
+If this app is installed from the Microsoft Store as an MSIX package instead, this doesn't apply:
+the Store signs the package automatically as part of certification, at no cost.

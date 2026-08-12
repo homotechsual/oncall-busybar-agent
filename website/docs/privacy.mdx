@@ -7,25 +7,25 @@ sidebar_position: 2
 *Last updated: 2026-08-12*
 
 **BUSY Bar on call agent** is a Windows tray app, published by homotechsual (MJCO), that runs on
-your own machine. This page describes what data it accesses, where it goes, and what's stored —
-for what the app does, see [Getting started](/).
+your own machine. This page describes what data it accesses, where it goes, and what's stored.
+For what the app does, see [Getting started](/).
 
 ## Who we are
 
 This app is published by **homotechsual** (MJCO). It ships with a default, shared multi-tenant
-Entra app registration so most users don't need to register their own — that shared registration
+Entra app registration so most users don't need to register their own. That shared registration
 grants the publisher no access to your data: Microsoft issues sign-in tokens directly to the app
 running on your own device, and those tokens never pass through anything the publisher operates.
 
 ## What data is accessed
 
-- **Microsoft Graph presence** (`Presence.Read`, delegated) — read on every poll (every
+- **Microsoft Graph presence** (`Presence.Read`, delegated): read on every poll (every
   `Graph:PollIntervalSeconds`, 30 seconds by default) to detect when you're on a call.
-- **Microsoft Graph calendar** (`Calendars.Read`, delegated) — read on that same poll, not only
+- **Microsoft Graph calendar** (`Calendars.Read`, delegated): read on that same poll, not only
   while you're on a call, to size the BUSY Bar timer to your current meeting's remaining time.
   Only each event's end time is used; event subjects, attendees, locations, and bodies are never
   used or stored.
-- **Local microphone activity** — specifically, Windows' own record of which applications have
+- **Local microphone activity**: specifically, Windows' own record of which applications have
   recently used the microphone (not audio content, and not a recording), used only as a fallback
   signal for calls Graph presence misses (for example, a Teams call started outside a scheduled
   meeting). This can be turned off entirely; see `Mic:Enabled` in [Configuration](/configuration).
@@ -37,9 +37,9 @@ organization's Entra tenant already grants you, not any elevated access of their
 
 Nowhere beyond the two systems this app is designed to talk to:
 
-- **Microsoft Graph**, via Microsoft's own sign-in (MSAL) and API — subject to your own tenant's
+- **Microsoft Graph**, via Microsoft's own sign-in (MSAL) and API: subject to your own tenant's
   existing data-handling terms, not any separate ones from this app.
-- **The BUSY Bar device**, over your local network — this app sends it only a remaining-time
+- **The BUSY Bar device**, over your local network: this app sends it only a remaining-time
   value and one of the device's own built-in status themes; no meeting titles, attendees, or any
   other calendar or presence detail ever reaches the device.
 
@@ -48,8 +48,8 @@ presence, calendar, or microphone activity is sent anywhere except the two desti
 
 ## What's stored locally
 
-- The MSAL authentication token cache, at `%LOCALAPPDATA%\oncall-busybar-agent\msal_cache.bin` —
-  managed by Microsoft's own authentication library, not this app's own code — so your sign-in
+- The MSAL authentication token cache, at `%LOCALAPPDATA%\oncall-busybar-agent\msal_cache.bin`
+  (managed by Microsoft's own authentication library, not this app's own code), so your sign-in
   persists between runs without you having to sign in every time.
 - Your per-user `appsettings.json`, under `%LOCALAPPDATA%\oncall-busybar-agent\`.
 
@@ -57,7 +57,7 @@ Both are local to your own Windows user account and are never transmitted anywhe
 
 ## Your choices
 
-- **Sign out** any time from the tray icon's right-click menu — this stops all Graph access
+- **Sign out** any time from the tray icon's right-click menu: this stops all Graph access
   immediately.
 - **Delete the token cache** at `%LOCALAPPDATA%\oncall-busybar-agent\msal_cache.bin` to remove
   your cached sign-in from this device entirely.
