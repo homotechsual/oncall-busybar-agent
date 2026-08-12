@@ -1,0 +1,55 @@
+---
+sidebar_position: 2
+---
+
+# Privacy policy
+
+**BUSY Bar on call agent** is a Windows tray app that runs on your own machine. This page
+describes what data it accesses, where it goes, and what's stored — for what the app does, see
+[Getting started](/).
+
+## What data is accessed
+
+- **Microsoft Graph presence** (`Presence.Read`, delegated) — read on a timer to detect when
+  you're on a call.
+- **Microsoft Graph calendar** (`Calendars.Read`, delegated) — read when you're on a call, to
+  size the BUSY Bar timer to your current meeting's remaining time.
+- **Local microphone activity** — whether the microphone is active or not, not audio content or
+  recordings — used only as a fallback signal for calls Graph presence misses (for example, a
+  Teams call started outside a scheduled meeting). This can be turned off entirely; see
+  `Mic:Enabled` in [Configuration](/configuration).
+
+Both Graph permissions are delegated: they run under your own sign-in, with only the access your
+organization's Entra tenant already grants you, not any elevated access of their own.
+
+## Where it goes
+
+Nowhere beyond the two systems this app is designed to talk to:
+
+- **Microsoft Graph**, via Microsoft's own sign-in (MSAL) and API — subject to your own tenant's
+  existing data-handling terms, not any separate ones from this app.
+- **The BUSY Bar device**, over your local network — this app sends it timer start/stop commands,
+  nothing else.
+
+This app has no telemetry, analytics, or crash reporting of any kind. Nothing about your
+presence, calendar, or microphone activity is sent anywhere except the two destinations above.
+
+## What's stored locally
+
+- The MSAL authentication token cache, managed by Microsoft's own authentication library — not
+  this app's own code — so your sign-in persists between runs without you having to sign in every
+  time.
+- Your per-user `appsettings.json`, under `%LOCALAPPDATA%\oncall-busybar-agent\`.
+
+Both are local to your own Windows user account and are never transmitted anywhere by this app.
+
+## IT-managed deployments
+
+Organizations that deploy this app via Intune or Group Policy can centrally *set* (not read back)
+configuration values through the registry policy layer described in
+[Intune / Group Policy](/intune-group-policy). This changes where configuration values come from;
+it doesn't change what data the app itself accesses or where that data goes.
+
+## Questions
+
+Open an issue on [GitHub](https://github.com/homotechsual/oncall-busybar-agent/issues).
