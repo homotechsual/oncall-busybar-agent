@@ -79,6 +79,8 @@ const config: Config = {
           title: 'Docs',
           items: [
             {label: 'Getting Started', to: '/'},
+            {label: 'Configuration', to: '/configuration'},
+            {label: 'Intune / Group Policy', to: '/intune-group-policy'},
             {label: 'Privacy', to: '/privacy'},
           ],
         },
