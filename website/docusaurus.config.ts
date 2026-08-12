@@ -79,6 +79,7 @@ const config: Config = {
           title: 'Docs',
           items: [
             {label: 'Getting Started', to: '/'},
+            {label: 'Privacy', to: '/privacy'},
           ],
         },
         {

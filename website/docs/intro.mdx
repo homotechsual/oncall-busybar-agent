@@ -6,4 +6,56 @@ slug: /
 # Getting started
 
 **BUSY Bar on call agent** is a Windows tray app that keeps a physical BUSY Bar's built-in timer
-in sync with real Microsoft Teams on-call status.
+in sync with real Microsoft Teams on call status: started (sized to your current meeting's
+remaining time when known) the moment you are on a call, stopped the moment you are not.
+
+It reads Microsoft Graph presence as its primary signal (with a calendar lookup for the timer's
+length), and falls back to local microphone activity for calls Graph presence misses.
+
+## Sign in
+
+No setup required to get started: this app ships with a default, shared multi-tenant Entra app
+registration (the `Graph:ClientId` already in `appsettings.json`). The first time you sign in, if
+your organization requires admin consent for third-party apps, ask your Entra admin to grant
+consent for the delegated `Presence.Read` and `Calendars.Read` permissions this app requests —
+after that, anyone in your tenant can sign in with no registration step of their own.
+
+## Optional: register your own Entra app
+
+Only do this if the default shared app above doesn't work for you — typically because your
+tenant's Conditional Access policy blocks third-party multi-tenant app consent outright, or you'd
+rather run this under an app registration you fully control. Register one in
+[the Entra admin center](https://entra.microsoft.com/):
+
+1. **App registrations** then **New registration**.
+2. Name it whatever you like (for example `oncall-busybar-agent`).
+3. Under **Supported account types**, choose **Accounts in any organizational directory**
+   (multi tenant) if you want anyone to be able to sign in without registering their own app, or
+   **Accounts in this organizational directory only** if you want it restricted to your tenant.
+4. Under **Redirect URI**, choose platform **Mobile and desktop applications** and add
+   `http://localhost`.
+5. This app signs in via the Windows broker (WAM), which requires its own redirect URI — add a
+   second entry under that same **Mobile and desktop applications** platform:
+   `ms-appx-web://Microsoft.AAD.BrokerPlugin/<client-id>`, substituting the app's own client ID
+   (from step 6 below) for `<client-id>`. Skipping this produces
+   `AADSTS50011: The redirect URI ... does not match the redirect URIs configured for the
+   application` the moment you try to sign in.
+6. Under **API permissions**, add Microsoft Graph delegated permissions `Presence.Read` and
+   `Calendars.Read`.
+7. Copy the **Application (client) ID** from the Overview page, and go back to add it into the
+   redirect URI from step 5.
+8. Point this app at your new registration by setting `Graph:ClientId` (and `Graph:TenantId` if
+   you restricted account types in step 3) via any of the layers in [Configuration](/configuration)
+   — the per-user `appsettings.json` file is the simplest for a single machine; the registry
+   policy layer is the way to roll this out to a whole organization via
+   [Intune or Group Policy](/intune-group-policy).
+
+## Next
+
+- [Configuration](/configuration): every setting, the four layers they can come from, and what
+  each defaults to.
+- [Intune / Group Policy](/intune-group-policy): centrally managing settings for a whole
+  organization.
+- [Running in production](/running): publishing a self-contained build, startup, and code signing.
+- [Privacy](/privacy): what data this app accesses and where it goes.
+- [Development](/development): building and testing this repo.
