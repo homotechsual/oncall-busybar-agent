@@ -18,14 +18,14 @@ public static class OnCallStateEvaluator
             return currentMeetingEndUtc is { } end ? new OnCallUntil(end) : new OnCallIndefinite();
         }
 
-        if (presence is not null && string.Equals(presence.Availability, FocusingAvailability, StringComparison.OrdinalIgnoreCase))
-        {
-            return currentMeetingEndUtc is { } end ? new FocusingUntil(end) : new FocusingIndefinite();
-        }
-
         if (microphoneActive)
         {
             return new OnCallIndefinite();
+        }
+
+        if (presence is not null && string.Equals(presence.Availability, FocusingAvailability, StringComparison.OrdinalIgnoreCase))
+        {
+            return currentMeetingEndUtc is { } end ? new FocusingUntil(end) : new FocusingIndefinite();
         }
 
         return new NotOnCall();

@@ -97,6 +97,16 @@ public class OnCallStateEvaluatorTests
     }
 
     [Fact]
+    public void Evaluate_MicFallbackWinsOverFocusingAvailability_WhenPresenceActivityIsNotOnCall()
+    {
+        var presence = new GraphPresenceSnapshot(Availability: "Focusing", Activity: "DoNotDisturb");
+
+        var result = OnCallStateEvaluator.Evaluate(presence, currentMeetingEndUtc: null, microphoneActive: true);
+
+        Assert.IsType<OnCallIndefinite>(result);
+    }
+
+    [Fact]
     public void Evaluate_ReturnsOnCallIndefinite_WhenMicActive_AndPresenceIsNull()
     {
         var result = OnCallStateEvaluator.Evaluate(presence: null, currentMeetingEndUtc: null, microphoneActive: true);
