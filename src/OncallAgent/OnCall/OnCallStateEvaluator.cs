@@ -9,12 +9,18 @@ namespace OncallAgent.OnCall;
 public static class OnCallStateEvaluator
 {
     private static readonly string[] OnCallActivities = ["InACall", "InAMeeting", "Presenting"];
+    private const string FocusingAvailability = "Focusing";
 
     public static OnCallState Evaluate(GraphPresenceSnapshot? presence, DateTimeOffset? currentMeetingEndUtc, bool microphoneActive)
     {
         if (presence is not null && OnCallActivities.Contains(presence.Activity))
         {
             return currentMeetingEndUtc is { } end ? new OnCallUntil(end) : new OnCallIndefinite();
+        }
+
+        if (presence is not null && string.Equals(presence.Availability, FocusingAvailability, StringComparison.OrdinalIgnoreCase))
+        {
+            return currentMeetingEndUtc is { } end ? new FocusingUntil(end) : new FocusingIndefinite();
         }
 
         if (microphoneActive)
