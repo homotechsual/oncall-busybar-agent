@@ -8,7 +8,12 @@ namespace OncallAgent.OnCall;
 /// a second independent trigger, and it never carries a known end time.</summary>
 public static class OnCallStateEvaluator
 {
-    private static readonly string[] OnCallActivities = ["InACall", "InAMeeting", "Presenting"];
+    private static readonly HashSet<string> OnCallActivities = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "InACall",
+        "InAMeeting",
+        "Presenting"
+    };
     private const string FocusingAvailability = "Focusing";
 
     public static OnCallState Evaluate(GraphPresenceSnapshot? presence, DateTimeOffset? currentMeetingEndUtc, bool microphoneActive)

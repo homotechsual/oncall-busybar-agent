@@ -18,8 +18,11 @@ public class OnCallStateEvaluatorTests
 
     [Theory]
     [InlineData("InACall")]
+    [InlineData("inacall")]
     [InlineData("InAMeeting")]
+    [InlineData("inameeting")]
     [InlineData("Presenting")]
+    [InlineData("presenting")]
     public void Evaluate_ReturnsOnCallIndefinite_WhenPresenceIndicatesACall_WithNoMatchingMeeting(string activity)
     {
         var presence = new GraphPresenceSnapshot(Availability: "Busy", Activity: activity);
