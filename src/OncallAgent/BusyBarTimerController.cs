@@ -19,6 +19,7 @@ public sealed class BusyBarTimerController
     // lunch, back_soon, booked, flow, chill_time, on_air, coding, low_social_battery) selected via
     // BusyBarSettings.Theme on the snapshot, independent of which profile slot (CardId) is used.
     private static readonly BusyBarSettings OnCallTheme = new("on_call", ShowWorkPhaseOnly: false, TriggerSmartHome: true);
+    private static readonly BusyBarSettings FocusTheme = new("flow", ShowWorkPhaseOnly: false, TriggerSmartHome: true);
 
     private static readonly TimeSpan ReapplyThreshold = TimeSpan.FromSeconds(60);
 
@@ -48,6 +49,8 @@ public sealed class BusyBarTimerController
         (NotOnCall, NotOnCall) => false,
         (OnCallIndefinite, OnCallIndefinite) => false,
         (OnCallUntil prev, OnCallUntil nxt) => (nxt.EndUtc - prev.EndUtc).Duration() > ReapplyThreshold,
+        (FocusingIndefinite, FocusingIndefinite) => false,
+        (FocusingUntil prev, FocusingUntil nxt) => (nxt.EndUtc - prev.EndUtc).Duration() > ReapplyThreshold,
         _ => true
     };
 
@@ -61,6 +64,14 @@ public sealed class BusyBarTimerController
             TimeLeftMs = Math.Max(0, (long)(until.EndUtc - DateTimeOffset.UtcNow).TotalMilliseconds),
             IsPaused = false,
             BusyBarSettings = OnCallTheme
+        },
+        FocusingIndefinite => new BusySnapshotInfinite { CardId = CardId, IsPaused = false, BusyBarSettings = FocusTheme },
+        FocusingUntil until => new BusySnapshotSimple
+        {
+            CardId = CardId,
+            TimeLeftMs = Math.Max(0, (long)(until.EndUtc - DateTimeOffset.UtcNow).TotalMilliseconds),
+            IsPaused = false,
+            BusyBarSettings = FocusTheme
         },
         _ => throw new ArgumentOutOfRangeException(nameof(state))
     };

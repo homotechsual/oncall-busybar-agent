@@ -42,6 +42,40 @@ public class OnCallStateEvaluatorTests
     }
 
     [Fact]
+    public void Evaluate_ReturnsFocusingIndefinite_WhenPresenceIndicatesFocus_WithNoMatchingCalendarBlock()
+    {
+        var presence = new GraphPresenceSnapshot(Availability: "Focusing", Activity: "DoNotDisturb");
+
+        var result = OnCallStateEvaluator.Evaluate(presence, currentMeetingEndUtc: null, microphoneActive: false);
+
+        Assert.IsType<FocusingIndefinite>(result);
+    }
+
+    [Fact]
+    public void Evaluate_ReturnsFocusingUntil_WhenPresenceIndicatesFocus_WithAMatchingCalendarBlock()
+    {
+        var presence = new GraphPresenceSnapshot(Availability: "Focusing", Activity: "DoNotDisturb");
+        var focusEnd = DateTimeOffset.UtcNow.AddMinutes(45);
+
+        var result = OnCallStateEvaluator.Evaluate(presence, currentMeetingEndUtc: focusEnd, microphoneActive: false);
+
+        var until = Assert.IsType<FocusingUntil>(result);
+        Assert.Equal(focusEnd, until.EndUtc);
+    }
+
+    [Fact]
+    public void Evaluate_OnCallPresenceWinsOverFocusingAvailability()
+    {
+        var presence = new GraphPresenceSnapshot(Availability: "Focusing", Activity: "InACall");
+        var meetingEnd = DateTimeOffset.UtcNow.AddMinutes(5);
+
+        var result = OnCallStateEvaluator.Evaluate(presence, currentMeetingEndUtc: meetingEnd, microphoneActive: false);
+
+        var until = Assert.IsType<OnCallUntil>(result);
+        Assert.Equal(meetingEnd, until.EndUtc);
+    }
+
+    [Fact]
     public void Evaluate_IgnoresMeetingEnd_WhenPresenceDoesNotIndicateACall()
     {
         var presence = new GraphPresenceSnapshot(Availability: "Available", Activity: "Available");
