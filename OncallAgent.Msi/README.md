@@ -60,11 +60,17 @@ Signing needs the one-time Azure setup below.
    {
        "name": "oncall-busybar-agent-release",
        "issuer": "https://token.actions.githubusercontent.com",
-       "subject": "repo:homotechsual/oncall-busybar-agent:environment:release",
+       "subject": "repo:homotechsual@2288257/oncall-busybar-agent@1331290728:environment:release",
        "description": "GitHub Actions release workflow, signing jobs",
        "audiences": ["api://AzureADTokenExchange"]
    }
    ```
+
+   This repo uses GitHub's immutable OIDC subject format, which embeds the owner and repo IDs
+   (`homotechsual@2288257`, `oncall-busybar-agent@1331290728`) so the credential can't be matched
+   by a renamed or re-created repo. The plain `repo:homotechsual/oncall-busybar-agent:...` form
+   fails with `AADSTS700213`. Confirm the current prefix with
+   `gh api repos/homotechsual/oncall-busybar-agent/actions/oidc/customization/sub`.
 
    Then create the matching GitHub Environment: **Settings → Environments → New environment**,
    named `release`. The workflow's signing jobs declare `environment: release`.
