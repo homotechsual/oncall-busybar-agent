@@ -141,7 +141,9 @@ public sealed class TrayApplicationContext : ApplicationContext
         var summary = state switch
         {
             OnCallUntil until => $"BUSY Bar: on call until {until.EndUtc.ToLocalTime():HH:mm}",
+            FocusingUntil until => $"BUSY Bar: focusing until {until.EndUtc.ToLocalTime():HH:mm}",
             OnCallIndefinite => "BUSY Bar: on call",
+            FocusingIndefinite => "BUSY Bar: focusing",
             _ => "BUSY Bar: idle"
         };
 

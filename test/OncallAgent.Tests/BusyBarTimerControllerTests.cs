@@ -59,6 +59,31 @@ public class BusyBarTimerControllerTests
     }
 
     [Fact]
+    public async Task ApplyAsync_StartsAnInfiniteTimer_WhenStateIsFocusingIndefinite()
+    {
+        var (controller, handler) = CreateController();
+
+        await controller.ApplyAsync(new FocusingIndefinite(), CancellationToken.None);
+
+        Assert.Single(handler.Requests);
+        Assert.Contains("\"type\":\"INFINITE\"", handler.LastRequestBody);
+        Assert.Contains("\"theme\":\"flow\"", handler.LastRequestBody);
+    }
+
+    [Fact]
+    public async Task ApplyAsync_StartsATimedTimer_WhenStateIsFocusingUntil()
+    {
+        var (controller, handler) = CreateController();
+        var end = DateTimeOffset.UtcNow.AddMinutes(20);
+
+        await controller.ApplyAsync(new FocusingUntil(end), CancellationToken.None);
+
+        Assert.Single(handler.Requests);
+        Assert.Contains("\"type\":\"SIMPLE\"", handler.LastRequestBody);
+        Assert.Contains("\"theme\":\"flow\"", handler.LastRequestBody);
+    }
+
+    [Fact]
     public async Task ApplyAsync_SendsNoSecondRequest_WhenTheMeetingEndMovesByLessThanTheThreshold()
     {
         var (controller, handler) = CreateController();
