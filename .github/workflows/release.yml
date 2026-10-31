@@ -1,0 +1,278 @@
+name: Release
+
+# Tag-triggered signed release: one MSI per architecture plus a sideload MSIX bundle, all signed via
+# Azure Artifact Signing and attached to a GitHub Release. The Store MSIX (build-msix.yml) is
+# separate and unsigned, since the Store re-signs it after certification.
+#
+# Signing jobs authenticate over OIDC and run under the "release" environment, which the Entra
+# federated credential's subject is scoped to -- see OncallAgent.Msi/README.md for the one-time
+# Azure setup and the repo variables read below.
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Release version (for example 1.0.0 or v1.0.0)"
+        required: true
+        type: string
+
+jobs:
+  version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - name: Resolve release version
+        id: version
+        shell: bash
+        env:
+          INPUT_VERSION: ${{ github.event.inputs.version }}
+        run: |
+          if [ -n "$INPUT_VERSION" ]; then
+            VERSION="$INPUT_VERSION"
+          else
+            VERSION="${GITHUB_REF_NAME}"
+          fi
+
+          VERSION="${VERSION#v}"
+
+          if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Invalid version: $VERSION"
+            exit 1
+          fi
+
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+  test:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Restore
+        run: dotnet restore test/OncallAgent.Tests/OncallAgent.Tests.csproj
+
+      - name: Run tests
+        run: dotnet test test/OncallAgent.Tests/OncallAgent.Tests.csproj --configuration Release --no-restore
+
+  msi:
+    needs: [version, test]
+    runs-on: windows-latest
+    environment: release
+    permissions:
+      id-token: write
+      contents: read
+    strategy:
+      matrix:
+        include:
+          - rid: win-x86
+            platform: x86
+          - rid: win-x64
+            platform: x64
+          - rid: win-arm64
+            platform: arm64
+    env:
+      VERSION: ${{ needs.version.outputs.version }}
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Publish self-contained build
+        run: >
+          dotnet publish src\OncallAgent\OncallAgent.csproj
+          -c Release
+          -r ${{ matrix.rid }}
+          --self-contained
+          -p:Version=${{ env.VERSION }}
+          -o publish\${{ matrix.rid }}
+
+      - name: Azure login
+        uses: azure/login@v3
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      # Signs the app's own binaries before they're harvested into the MSI. The .NET runtime files
+      # in a self-contained publish are already Microsoft-signed; only OncallAgent.exe/.dll are ours.
+      - name: Sign the published app
+        uses: azure/artifact-signing-action@v2
+        with:
+          endpoint: ${{ vars.AZURE_ARTIFACT_SIGNING_ENDPOINT }}
+          signing-account-name: ${{ vars.AZURE_ARTIFACT_SIGNING_ACCOUNT }}
+          certificate-profile-name: ${{ vars.AZURE_ARTIFACT_SIGNING_PROFILE }}
+          files: |-
+            ${{ github.workspace }}\publish\${{ matrix.rid }}\OncallAgent.exe
+            ${{ github.workspace }}\publish\${{ matrix.rid }}\OncallAgent.dll
+          file-digest: SHA256
+          timestamp-rfc3161: http://timestamp.acs.microsoft.com
+          timestamp-digest: SHA256
+
+      - name: Build the MSI
+        shell: pwsh
+        run: |
+          $publishDir = (Resolve-Path "publish\${{ matrix.rid }}").Path
+          dotnet build OncallAgent.Msi\OncallAgent.Msi.wixproj `
+            -p:Platform=${{ matrix.platform }} `
+            -p:Version=$env:VERSION `
+            -p:PublishDir=$publishDir `
+            -p:Configuration=Release
+
+      # All three architectures otherwise produce identically-named MSIs, which would collide once
+      # gathered into one directory in the release job below.
+      - name: Rename MSI with architecture suffix
+        id: msi
+        shell: pwsh
+        run: |
+          $msi = Get-ChildItem "OncallAgent.Msi\bin\${{ matrix.platform }}\Release\*.msi" | Select-Object -First 1
+          $dest = Join-Path $msi.DirectoryName "oncall-busybar-agent-$env:VERSION-${{ matrix.platform }}.msi"
+          Move-Item -Path $msi.FullName -Destination $dest
+          "path=$dest" >> $env:GITHUB_OUTPUT
+
+      # The exe's signature doesn't cover the MSI container; Windows needs both signed independently
+      # to show a trusted publisher on install.
+      - name: Sign the MSI
+        uses: azure/artifact-signing-action@v2
+        with:
+          endpoint: ${{ vars.AZURE_ARTIFACT_SIGNING_ENDPOINT }}
+          signing-account-name: ${{ vars.AZURE_ARTIFACT_SIGNING_ACCOUNT }}
+          certificate-profile-name: ${{ vars.AZURE_ARTIFACT_SIGNING_PROFILE }}
+          files: ${{ steps.msi.outputs.path }}
+          file-digest: SHA256
+          timestamp-rfc3161: http://timestamp.acs.microsoft.com
+          timestamp-digest: SHA256
+
+      - name: Upload MSI artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: release-msi-${{ matrix.platform }}
+          path: ${{ steps.msi.outputs.path }}
+          if-no-files-found: error
+
+  msix:
+    needs: [version, test]
+    runs-on: windows-latest
+    environment: release
+    permissions:
+      id-token: write
+      contents: read
+    env:
+      VERSION: ${{ needs.version.outputs.version }}
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v3
+
+      # A signed MSIX only installs if the manifest's Publisher exactly matches the signing
+      # certificate's subject, which differs from the Store identity checked into the manifest.
+      # Rewritten here for this build only; the Store build (build-msix.yml) is unaffected.
+      - name: Set sideload package identity
+        shell: pwsh
+        env:
+          PUBLISHER: ${{ vars.AZURE_ARTIFACT_SIGNING_PUBLISHER }}
+        run: |
+          if ([string]::IsNullOrWhiteSpace($env:PUBLISHER)) {
+            throw "AZURE_ARTIFACT_SIGNING_PUBLISHER repo variable is not set"
+          }
+          $manifestPath = (Resolve-Path "OncallAgent.Package\Package.appxmanifest").Path
+          $manifest = New-Object System.Xml.XmlDocument
+          $manifest.PreserveWhitespace = $true
+          $manifest.Load($manifestPath)
+          $manifest.Package.Identity.Publisher = $env:PUBLISHER
+          $manifest.Package.Identity.Version = "$env:VERSION.0"
+          $manifest.Save($manifestPath)
+
+      - name: Restore packaging project
+        run: msbuild OncallAgent.Package/OncallAgent.Package.wapproj /t:Restore /p:Configuration=Release
+
+      # Same SDK pin as build-msix.yml, and for the same reason it goes through
+      # PackageTargetPlatformVersion rather than /p:TargetPlatformVersion (see that workflow).
+      - name: Build sideload MSIX bundle
+        run: >
+          msbuild OncallAgent.Package/OncallAgent.Package.wapproj
+          /t:Publish
+          /p:Configuration=Release
+          /p:Version=${{ env.VERSION }}
+          /p:AppxBundlePlatforms="x86|x64|arm64"
+          /p:AppxBundle=Always
+          /p:UapAppxPackageBuildMode=SideloadOnly
+          /p:AppxPackageSigningEnabled=false
+          /p:AppxAutoIncrementPackageRevision=false
+          /p:PackageTargetPlatformVersion=10.0.26100.0
+          /p:AppxPackageDir=AppPackages\
+
+      - name: Rename bundle
+        id: bundle
+        shell: pwsh
+        run: |
+          $bundle = Get-ChildItem "OncallAgent.Package\AppPackages" -Recurse -Filter *.msixbundle | Select-Object -First 1
+          $dest = Join-Path $bundle.DirectoryName "oncall-busybar-agent-$env:VERSION.msixbundle"
+          Move-Item -Path $bundle.FullName -Destination $dest
+          "path=$dest" >> $env:GITHUB_OUTPUT
+
+      - name: Azure login
+        uses: azure/login@v3
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Sign the MSIX bundle
+        uses: azure/artifact-signing-action@v2
+        with:
+          endpoint: ${{ vars.AZURE_ARTIFACT_SIGNING_ENDPOINT }}
+          signing-account-name: ${{ vars.AZURE_ARTIFACT_SIGNING_ACCOUNT }}
+          certificate-profile-name: ${{ vars.AZURE_ARTIFACT_SIGNING_PROFILE }}
+          files: ${{ steps.bundle.outputs.path }}
+          file-digest: SHA256
+          timestamp-rfc3161: http://timestamp.acs.microsoft.com
+          timestamp-digest: SHA256
+
+      - name: Upload MSIX artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: release-msix
+          path: ${{ steps.bundle.outputs.path }}
+          if-no-files-found: error
+
+  release:
+    needs: [msi, msix]
+    if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download release artifacts
+        uses: actions/download-artifact@v8
+        with:
+          pattern: release-*
+          path: release-artifacts
+          merge-multiple: true
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: ${{ github.ref_name }}
+          generate_release_notes: true
+          files: |
+            release-artifacts/*.msi
+            release-artifacts/*.msixbundle
