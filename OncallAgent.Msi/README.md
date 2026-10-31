@@ -76,10 +76,12 @@ Signing needs the one-time Azure setup below.
    az role assignment create --assignee <app-id> --role "Artifact Signing Certificate Profile Signer" --scope <certificate-profile-resource-id>
    ```
 
-7. Set these repository **variables** (Settings → Secrets and variables → Actions → Variables;
-   not Secrets, since OIDC means there's no secret value to store):
+7. Set these as Actions **secrets**, either on the repository or on the `release` environment
+   (Settings → Secrets and variables → Actions, or Settings → Environments → release). None of
+   them is a credential (OIDC means there's no client secret), but keeping them as secrets keeps
+   tenant/subscription IDs out of the logs:
 
-   | Variable | Value |
+   | Secret | Value |
    | --- | --- |
    | `AZURE_CLIENT_ID` | The app registration's Application (client) ID from step 4. |
    | `AZURE_TENANT_ID` | Your Entra tenant ID. |

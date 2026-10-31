@@ -101,18 +101,18 @@ jobs:
       - name: Azure login
         uses: azure/login@v3
         with:
-          client-id: ${{ vars.AZURE_CLIENT_ID }}
-          tenant-id: ${{ vars.AZURE_TENANT_ID }}
-          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
       # Signs the app's own binaries before they're harvested into the MSI. The .NET runtime files
       # in a self-contained publish are already Microsoft-signed; only OncallAgent.exe/.dll are ours.
       - name: Sign the published app
         uses: azure/artifact-signing-action@v2
         with:
-          endpoint: ${{ vars.AZURE_ARTIFACT_SIGNING_ENDPOINT }}
-          signing-account-name: ${{ vars.AZURE_ARTIFACT_SIGNING_ACCOUNT }}
-          certificate-profile-name: ${{ vars.AZURE_ARTIFACT_SIGNING_PROFILE }}
+          endpoint: ${{ secrets.AZURE_ARTIFACT_SIGNING_ENDPOINT }}
+          signing-account-name: ${{ secrets.AZURE_ARTIFACT_SIGNING_ACCOUNT }}
+          certificate-profile-name: ${{ secrets.AZURE_ARTIFACT_SIGNING_PROFILE }}
           files: |-
             ${{ github.workspace }}\publish\${{ matrix.rid }}\OncallAgent.exe
             ${{ github.workspace }}\publish\${{ matrix.rid }}\OncallAgent.dll
@@ -146,9 +146,9 @@ jobs:
       - name: Sign the MSI
         uses: azure/artifact-signing-action@v2
         with:
-          endpoint: ${{ vars.AZURE_ARTIFACT_SIGNING_ENDPOINT }}
-          signing-account-name: ${{ vars.AZURE_ARTIFACT_SIGNING_ACCOUNT }}
-          certificate-profile-name: ${{ vars.AZURE_ARTIFACT_SIGNING_PROFILE }}
+          endpoint: ${{ secrets.AZURE_ARTIFACT_SIGNING_ENDPOINT }}
+          signing-account-name: ${{ secrets.AZURE_ARTIFACT_SIGNING_ACCOUNT }}
+          certificate-profile-name: ${{ secrets.AZURE_ARTIFACT_SIGNING_PROFILE }}
           files: ${{ steps.msi.outputs.path }}
           file-digest: SHA256
           timestamp-rfc3161: http://timestamp.acs.microsoft.com
@@ -188,10 +188,10 @@ jobs:
       - name: Set sideload package identity
         shell: pwsh
         env:
-          PUBLISHER: ${{ vars.AZURE_ARTIFACT_SIGNING_PUBLISHER }}
+          PUBLISHER: ${{ secrets.AZURE_ARTIFACT_SIGNING_PUBLISHER }}
         run: |
           if ([string]::IsNullOrWhiteSpace($env:PUBLISHER)) {
-            throw "AZURE_ARTIFACT_SIGNING_PUBLISHER repo variable is not set"
+            throw "AZURE_ARTIFACT_SIGNING_PUBLISHER secret is not set"
           }
           $manifestPath = (Resolve-Path "OncallAgent.Package\Package.appxmanifest").Path
           $manifest = New-Object System.Xml.XmlDocument
@@ -232,16 +232,16 @@ jobs:
       - name: Azure login
         uses: azure/login@v3
         with:
-          client-id: ${{ vars.AZURE_CLIENT_ID }}
-          tenant-id: ${{ vars.AZURE_TENANT_ID }}
-          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
       - name: Sign the MSIX bundle
         uses: azure/artifact-signing-action@v2
         with:
-          endpoint: ${{ vars.AZURE_ARTIFACT_SIGNING_ENDPOINT }}
-          signing-account-name: ${{ vars.AZURE_ARTIFACT_SIGNING_ACCOUNT }}
-          certificate-profile-name: ${{ vars.AZURE_ARTIFACT_SIGNING_PROFILE }}
+          endpoint: ${{ secrets.AZURE_ARTIFACT_SIGNING_ENDPOINT }}
+          signing-account-name: ${{ secrets.AZURE_ARTIFACT_SIGNING_ACCOUNT }}
+          certificate-profile-name: ${{ secrets.AZURE_ARTIFACT_SIGNING_PROFILE }}
           files: ${{ steps.bundle.outputs.path }}
           file-digest: SHA256
           timestamp-rfc3161: http://timestamp.acs.microsoft.com
