@@ -45,7 +45,9 @@ jobs:
 
       - uses: actions/setup-node@v7
         with:
-          node-version: 'current'
+          # Not 'current': that can resolve to a prerelease (e.g. v27.0.0-alpha), which fails
+          # Docusaurus's semver engines check (>=20.0) since prereleases never satisfy a range.
+          node-version: 'lts/*'
           cache: 'yarn'
           cache-dependency-path: website/yarn.lock
 
