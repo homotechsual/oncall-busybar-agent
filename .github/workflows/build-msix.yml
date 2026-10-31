@@ -23,15 +23,15 @@ jobs:
   build:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v6
         with:
           dotnet-version: "10.0.x"
 
       - name: Setup MSBuild
-        uses: microsoft/setup-msbuild@v2
+        uses: microsoft/setup-msbuild@v3
 
       - name: Restore
         run: dotnet restore test/OncallAgent.Tests/OncallAgent.Tests.csproj
@@ -50,13 +50,16 @@ jobs:
       # here, not a shortcut. This is the opposite of the local sideload-testing flow, which does
       # need the test certificate.
       #
-      # TargetPlatformVersion is pinned to 10.0.26100.0 here specifically for CI, overriding
-      # whatever the checked-in .wapproj says (10.0.28000.0 as of this workflow's creation) --
-      # confirmed via GitHub's windows-latest runner-image software manifest that 10.0.26100.0 is
-      # the newest Windows SDK actually installed there. This override does not change local
-      # development in Visual Studio; it only affects this CI build. If VS's own installed SDK
-      # version changes later, re-check this against the runner image's current manifest rather
-      # than assuming the pinned value still matches.
+      # The packaging project's TargetPlatformVersion is pinned to 10.0.26100.0 here specifically
+      # for CI, overriding whatever the checked-in .wapproj says (10.0.28000.0 as of this
+      # workflow's creation) -- confirmed via GitHub's windows-latest runner-image software
+      # manifest that 10.0.26100.0 is the newest Windows SDK actually installed there. If VS's own
+      # installed SDK version changes later, re-check this against the runner image's current
+      # manifest rather than assuming the pinned value still matches.
+      #
+      # This goes through PackageTargetPlatformVersion (read only by the .wapproj), never
+      # /p:TargetPlatformVersion: global properties flow into OncallAgent.csproj, where that
+      # override swaps the Windows SDK projection pack and fails the build with NETSDK1112.
       - name: Build and publish MSIX bundle
         run: >
           msbuild OncallAgent.Package/OncallAgent.Package.wapproj
@@ -66,14 +69,14 @@ jobs:
           /p:AppxBundle=Always
           /p:UapAppxPackageBuildMode=StoreUpload
           /p:AppxPackageSigningEnabled=false
-          /p:TargetPlatformVersion=10.0.26100.0
+          /p:PackageTargetPlatformVersion=10.0.26100.0
           /p:AppxPackageDir=AppPackages\
 
       # Uploads the whole output folder rather than guessing the exact produced filename/extension
       # (.msixupload vs .appxupload) -- confirm the real output on the first run and narrow this if
       # the extra files (symbols, logs) turn out to be worth trimming.
       - name: Upload package artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: OncallAgent-Package
           path: OncallAgent.Package/AppPackages/**

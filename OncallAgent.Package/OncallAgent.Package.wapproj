@@ -52,6 +52,11 @@
   <PropertyGroup>
     <ProjectGuid>973c6cfd-75e8-44f9-899a-00d088c1446e</ProjectGuid>
     <TargetPlatformVersion>10.0.28000.0</TargetPlatformVersion>
+    <!-- CI overrides the Windows SDK via this property rather than /p:TargetPlatformVersion directly:
+         global properties flow into ProjectReferences, and a TargetPlatformVersion override reaching
+         OncallAgent.csproj changes which Microsoft.Windows.SDK.NET.Ref pack it expects, failing the
+         build with NETSDK1112 against the pack restore actually downloaded. -->
+    <TargetPlatformVersion Condition="'$(PackageTargetPlatformVersion)' != ''">$(PackageTargetPlatformVersion)</TargetPlatformVersion>
     <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
     <DefaultLanguage>en-US</DefaultLanguage>
     <AppxPackageSigningEnabled>True</AppxPackageSigningEnabled>
