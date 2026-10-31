@@ -1,0 +1,22 @@
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  <Fragment>
+    <ComponentGroup Id="AppFiles" Directory="INSTALLFOLDER">
+      <Files Include="!(bindpath.AppPublish)\**" />
+    </ComponentGroup>
+  </Fragment>
+
+  <Fragment>
+    <ComponentGroup Id="AppShortcuts" Directory="AppProgramMenuFolder">
+      <Component Id="StartMenuShortcut">
+        <Shortcut
+          Id="StartMenuShortcutFile"
+          Name="BUSY Bar on call agent"
+          Target="[INSTALLFOLDER]OncallAgent.exe"
+          WorkingDirectory="INSTALLFOLDER" />
+        <RemoveFolder Id="RemoveAppProgramMenuFolder" On="uninstall" />
+        <!-- Per-machine keypath for a file-less component (WiX requires exactly one keypath). -->
+        <RegistryValue Root="HKLM" Key="Software\homotechsual\OncallBusyBarAgent" Name="Installed" Type="integer" Value="1" KeyPath="yes" />
+      </Component>
+    </ComponentGroup>
+  </Fragment>
+</Wix>

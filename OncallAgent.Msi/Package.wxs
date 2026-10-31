@@ -1,0 +1,19 @@
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  <Package
+    Name="BUSY Bar on call agent"
+    Manufacturer="homotechsual"
+    Version="$(var.Version)"
+    UpgradeCode="$(var.UpgradeCode)"
+    Scope="perMachine">
+
+    <MajorUpgrade
+      DowngradeErrorMessage="A newer version of BUSY Bar on call agent is already installed." />
+
+    <MediaTemplate EmbedCab="yes" />
+
+    <Feature Id="Main">
+      <ComponentGroupRef Id="AppFiles" />
+      <ComponentGroupRef Id="AppShortcuts" />
+    </Feature>
+  </Package>
+</Wix>

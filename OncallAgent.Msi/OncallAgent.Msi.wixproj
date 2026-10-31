@@ -1,0 +1,29 @@
+<Project Sdk="WixToolset.Sdk/7.0.0">
+
+  <PropertyGroup>
+    <AcceptEula>wix7</AcceptEula>
+    <InstallerPlatform>$(Platform)</InstallerPlatform>
+    <OutputPath>bin\$(Platform)\$(Configuration)\</OutputPath>
+    <DefineConstants>Version=$(Version)</DefineConstants>
+    <!-- ICE38/43/57 assume ProgramMenuFolder is per-user and want an HKCU keypath for the shortcut
+         component. In this perMachine package it's the All Users Start Menu, so HKLM is correct. -->
+    <SuppressIces>ICE38;ICE43;ICE57</SuppressIces>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Platform)'=='x86'">
+    <DefineConstants>$(DefineConstants);UpgradeCode=7601d507-a5e1-470a-b135-2420c1a535a5</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Platform)'=='x64'">
+    <DefineConstants>$(DefineConstants);UpgradeCode=c2029887-773a-4129-90ac-684fb5a6afec</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Platform)'=='arm64'">
+    <DefineConstants>$(DefineConstants);UpgradeCode=72a69d23-5929-431b-8a4d-924d92ce671a</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <BindPath Include="$(PublishDir)" BindName="AppPublish" />
+  </ItemGroup>
+
+</Project>
