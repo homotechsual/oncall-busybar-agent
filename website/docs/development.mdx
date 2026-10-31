@@ -20,3 +20,22 @@ Don't use `dotnet run` for normal/production use: it always launches through the
 own console host, so a console window stays open and attached for as long as the app runs,
 whatever the target's own output type is. `dotnet run` is fine for development iteration, where
 having that console around for log output is actually useful.
+
+## Building the installers locally
+
+The release pipeline builds the MSI from a self-contained publish. To reproduce it locally
+(unsigned; signing only happens in CI):
+
+```powershell
+dotnet publish src\OncallAgent\OncallAgent.csproj -c Release -r win-x64 --self-contained -p:Version=1.0.0 -o publish\win-x64
+dotnet build OncallAgent.Msi\OncallAgent.Msi.wixproj -c Release -p:Platform=x64 -p:Version=1.0.0 -p:PublishDir=$((Resolve-Path publish\win-x64).Path)
+```
+
+The MSI lands in `OncallAgent.Msi\bin\x64\Release\`. Swap in `win-x86`/`x86` or
+`win-arm64`/`arm64` for the other architectures.
+
+> If `dotnet publish` fails with `MSB3094: "DestinationFiles" refers to 1 item(s), and
+> "SourceFiles" refers to N item(s)`, the repo (or the `-o` output path) is sitting under a Windows
+> user profile folder whose name contains an apostrophe (`C:\Users\O'Brien\...`). The .NET SDK's
+> publish targets mis-batch file copies when an apostrophe appears anywhere in the path. Publish
+> from (or to) a path without one, e.g. `-o C:\publish\oncall-busybar-agent`.
