@@ -7,7 +7,7 @@ import {DOCUSAURUS_VERSION} from '@docusaurus/utils';
 
 const config: Config = {
   title: 'BUSY Bar on call agent',
-  tagline: "Keeps a physical BUSY Bar's timer in sync with your Microsoft Teams on-call status",
+  tagline: "Runs your BUSY Bar's on-call timer while you're on a Microsoft Teams call",
   favicon: 'img/favicon.svg',
 
   future: {
@@ -78,7 +78,7 @@ const config: Config = {
         {
           title: 'Docs',
           items: [
-            {label: 'Getting Started', to: '/'},
+            {label: 'Getting started', to: '/getting-started'},
             {label: 'Configuration', to: '/configuration'},
             {label: 'Intune / Group Policy', to: '/intune-group-policy'},
             {label: 'Running in production', to: '/running'},
@@ -89,6 +89,7 @@ const config: Config = {
         {
           title: 'More',
           items: [
+            {label: 'Microsoft Store', href: 'https://apps.microsoft.com/detail/9P1XRPJT3126'},
             {label: 'GitHub', href: 'https://github.com/homotechsual/oncall-busybar-agent'},
           ],
         },

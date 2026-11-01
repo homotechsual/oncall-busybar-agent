@@ -1,0 +1,233 @@
+.page {
+  --page-width: 72rem;
+  --gutter: clamp(1rem, 4vw, 2rem);
+  color: var(--site-text);
+}
+
+.hero,
+.situations,
+.install,
+.managedInner {
+  width: 100%;
+  max-width: var(--page-width);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+/* Hero: the copy, then the bar itself at full width. */
+.hero {
+  padding-block: clamp(3rem, 8vw, 6rem) clamp(3rem, 7vw, 5rem);
+}
+
+.heroText {
+  max-width: 40rem;
+}
+
+.title {
+  margin: 0;
+  font-size: clamp(2.5rem, 6vw, 4.25rem);
+  font-weight: 800;
+  line-height: 1.02;
+  letter-spacing: -0.035em;
+  color: var(--site-heading);
+}
+
+.lede {
+  margin: 1.5rem 0 0;
+  font-size: clamp(1.1rem, 2vw, 1.3rem);
+  line-height: 1.55;
+  color: var(--site-text);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 2rem;
+}
+
+.primary,
+.secondary {
+  display: inline-flex;
+  align-items: center;
+  min-height: 3rem;
+  padding: 0 1.4rem;
+  border-radius: 999px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease;
+}
+
+.primary {
+  background: var(--site-signal);
+  color: #fff;
+}
+
+.primary:hover {
+  background: var(--site-signal-strong);
+  color: #fff;
+  text-decoration: none;
+}
+
+.secondary {
+  border: 1px solid var(--site-line-strong);
+  color: var(--site-heading);
+}
+
+.secondary:hover {
+  border-color: var(--site-heading);
+  color: var(--site-heading);
+  text-decoration: none;
+}
+
+.requirements {
+  margin: 1.25rem 0 0;
+  font-size: 0.95rem;
+  color: var(--site-muted);
+}
+
+.heroDevice {
+  margin-top: clamp(2.5rem, 6vw, 4rem);
+}
+
+.caption {
+  margin: 1rem 0 0;
+  font-size: 0.95rem;
+  color: var(--site-muted);
+}
+
+.sectionTitle {
+  margin: 0 0 1.75rem;
+  font-size: clamp(1.6rem, 3vw, 2.1rem);
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  color: var(--site-heading);
+}
+
+/* What it does: a situation and its result on each row. */
+.situations {
+  padding-block: clamp(2.5rem, 6vw, 4rem);
+}
+
+.situationList {
+  margin: 0;
+  display: grid;
+  gap: 1.5rem;
+}
+
+.situation {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.situation dt {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--site-heading);
+}
+
+.situation dd {
+  margin: 0;
+  max-width: 38rem;
+  line-height: 1.6;
+}
+
+@media (min-width: 768px) {
+  .situation {
+    grid-template-columns: 18rem 1fr;
+    gap: 2rem;
+    align-items: baseline;
+  }
+}
+
+/* Managed rollouts: the navy band shared with the rest of the homotechsual sites. */
+.managed {
+  background: #263141;
+  color: #dbe2ea;
+  padding-block: clamp(3rem, 7vw, 4.5rem);
+}
+
+.managed .sectionTitle {
+  color: #fff;
+}
+
+.managedList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 2rem;
+}
+
+@media (min-width: 768px) {
+  .managedList {
+    grid-template-columns: 1fr 1fr;
+    column-gap: 3rem;
+  }
+}
+
+.managedList p {
+  margin: 0 0 0.5rem;
+  max-width: 30rem;
+  line-height: 1.6;
+}
+
+.managedList a {
+  color: #f2bab6;
+  font-weight: 600;
+}
+
+.managedList a:hover {
+  color: #fff;
+}
+
+/* Install options. */
+.install {
+  padding-block: clamp(3rem, 7vw, 4.5rem) clamp(4rem, 9vw, 6rem);
+}
+
+.install .sectionTitle {
+  margin-bottom: 0.75rem;
+}
+
+.installNote {
+  margin: 0 0 2rem;
+  max-width: 38rem;
+  color: var(--site-muted);
+}
+
+.installGrid {
+  display: grid;
+  gap: 2rem;
+}
+
+@media (min-width: 900px) {
+  .installGrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.installer {
+  padding-top: 1.25rem;
+  border-top: 3px solid var(--site-line-strong);
+}
+
+.installer:first-child {
+  border-top-color: var(--site-signal);
+}
+
+.installer h3 {
+  margin: 0 0 0.5rem;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--site-heading);
+}
+
+.installer p {
+  margin: 0 0 0.75rem;
+  line-height: 1.6;
+}
+
+.installer a {
+  font-weight: 600;
+}
