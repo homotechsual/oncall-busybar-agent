@@ -10,7 +10,7 @@
   <Identity
     Name="MJCOLtd.OnCallBusyBarAgent"
     Publisher="CN=0F85AA1C-4085-469E-B1CB-993E79A0DB19"
-    Version="1.0.7.0" />
+    Version="1.0.0.0" />
 
   <Properties>
     <DisplayName>BUSY Bar on call agent</DisplayName>
