@@ -159,6 +159,10 @@ export default function Home(): ReactNode {
           <HeroDevice />
         </header>
 
+        <div className={styles.dividerWrap} aria-hidden="true">
+          <div className={styles.divider} />
+        </div>
+
         <section className={styles.situations} aria-labelledby="situations-heading">
           <h2 id="situations-heading" className={styles.sectionTitle}>
             What it does
