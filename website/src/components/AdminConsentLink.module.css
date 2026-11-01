@@ -1,0 +1,17 @@
+.button {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  padding: 0 1.25rem;
+  border-radius: var(--site-radius);
+  background: var(--site-heading);
+  color: var(--site-paper);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.button:hover {
+  color: var(--site-paper);
+  text-decoration: none;
+  opacity: 0.9;
+}

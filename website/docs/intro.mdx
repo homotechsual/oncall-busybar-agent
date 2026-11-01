@@ -3,6 +3,8 @@ sidebar_position: 1
 slug: /getting-started
 ---
 
+import AdminConsentLink from '@site/src/components/AdminConsentLink';
+
 # Getting started
 
 **BUSY Bar on call agent** is a Windows tray app that runs your BUSY Bar's timer while you're on a
@@ -22,9 +24,14 @@ school account to add Teams presence, meeting countdowns and the FLOW status for
 
 There's nothing to set up before you sign in. The app ships with a shared, multi-tenant Entra app
 registration (the `Graph:ClientId` in `appsettings.json`). If your organization requires admin
-consent for third-party apps, ask an Entra admin to grant consent for the delegated
-`Presence.Read` and `Calendars.ReadBasic` permissions. After that, anyone in your tenant can sign
-in. To sign in, right-click the tray icon and choose **Sign in**.
+consent for third-party apps, an Entra admin can approve the delegated `Presence.Read` and
+`Calendars.ReadBasic` permissions for everyone with this link:
+
+<AdminConsentLink />
+
+After that, anyone in your tenant can sign in without being asked. Granting consent needs a Global
+Administrator, Privileged Role Administrator, Cloud Application Administrator or Application
+Administrator. To sign in, right-click the tray icon and choose **Sign in**.
 
 ## Optional: register your own Entra app
 

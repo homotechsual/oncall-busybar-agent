@@ -1,0 +1,22 @@
+.page {
+  width: 100%;
+  max-width: 44rem;
+  margin-inline: auto;
+  padding: clamp(3rem, 8vw, 5rem) clamp(1rem, 4vw, 2rem);
+  min-height: 50vh;
+}
+
+.page h1 {
+  font-size: clamp(2rem, 4vw, 2.6rem);
+  letter-spacing: -0.03em;
+}
+
+.page p {
+  line-height: 1.6;
+}
+
+.detail {
+  color: var(--site-muted);
+  font-size: 0.95rem;
+  overflow-wrap: anywhere;
+}

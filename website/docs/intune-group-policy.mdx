@@ -2,7 +2,24 @@
 sidebar_position: 4
 ---
 
+import AdminConsentLink from '@site/src/components/AdminConsentLink';
+
 # Intune / Group Policy
+
+## Approve the app for your organization
+
+Before rolling the app out, an admin can grant consent for its permissions on everyone's behalf,
+so nobody is asked when they sign in:
+
+<AdminConsentLink />
+
+It covers the shared app registration's delegated, read-only permissions: `Presence.Read` and
+`Calendars.ReadBasic`, plus the standard sign-in permissions (`User.Read`, `openid`, `profile`
+and `offline_access`). You need to be a Global Administrator, Privileged Role Administrator, Cloud
+Application Administrator or Application Administrator. If you use your own app registration
+instead, grant consent for it in the Entra admin center.
+
+## Managing settings
 
 You can lock down any of the settings in [Configuration](/configuration) by setting registry
 values under `HKLM\SOFTWARE\Policies\OncallBusyBarAgent`, with one subkey per section:
