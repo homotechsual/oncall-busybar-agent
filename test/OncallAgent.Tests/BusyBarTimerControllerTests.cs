@@ -108,6 +108,22 @@ public class BusyBarTimerControllerTests
     }
 
     [Fact]
+    public async Task ApplyAsync_SendsTheStateToTheNewBar_AfterReconnecting_EvenWhenItHasNotChanged()
+    {
+        var (controller, _) = CreateController();
+        await controller.ApplyAsync(new OnCallIndefinite(), CancellationToken.None);
+
+        var newHandler = new FakeHttpMessageHandler { ResponseBody = "{\"result\":\"OK\"}" };
+        var newHttp = new HttpClient(newHandler) { BaseAddress = new Uri("http://192.168.1.50/") };
+        controller.Reconnect(new Busy.Bar.BusyBar(newHttp, new Busy.Bar.BusyBarOptions()));
+        await controller.ApplyAsync(new OnCallIndefinite(), CancellationToken.None);
+        await controller.ApplyAsync(new OnCallIndefinite(), CancellationToken.None);
+
+        Assert.Single(newHandler.Requests);
+        Assert.Contains("\"type\":\"INFINITE\"", newHandler.LastRequestBody);
+    }
+
+    [Fact]
     public async Task ApplyAsync_StopsTheTimer_WhenTransitioningFromOnCallToNotOnCall()
     {
         var (controller, handler) = CreateController();

@@ -56,7 +56,8 @@ Editor.
    settings are grouped under **Microsoft Graph sign-in**, **Microphone fallback** and **BUSY Bar
    device**.
 4. Set the ones you want to enforce and assign the profile to your devices. Anything left as "Not
-   configured" comes from the user's own `appsettings.json`.
+   configured" comes from the user's own `appsettings.json`. Enforced settings show as locked in
+   the app's settings window, so users can see what you've set but not change it.
 
 **Updating the template later:** Intune won't accept a changed ADMX with the same namespace while
 the old one is still in use. Either delete the profiles that use it and the old ADMX first, or

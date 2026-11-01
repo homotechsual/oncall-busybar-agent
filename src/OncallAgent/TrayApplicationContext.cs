@@ -5,6 +5,7 @@ using OncallAgent.Graph;
 using OncallAgent.Mic;
 using OncallAgent.OnCall;
 using OncallAgent.Packaging;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -25,7 +26,11 @@ public sealed class TrayApplicationContext : ApplicationContext
     private readonly BusyBarTimerController _timerController;
     private readonly IStartupShortcutManager _startupShortcutManager;
     private readonly IPackagedAppContext _packagedAppContext;
+    private readonly IConfiguration _configuration;
+    private readonly IPolicyRegistryReader _policyReader;
     private readonly ILogger<TrayApplicationContext> _logger;
+
+    private SettingsForm? _settingsForm;
 
     private GraphPresenceSnapshot? _latestPresence;
     private DateTimeOffset? _latestMeetingEnd;
@@ -43,10 +48,14 @@ public sealed class TrayApplicationContext : ApplicationContext
         BusyBarTimerController timerController,
         IStartupShortcutManager startupShortcutManager,
         IPackagedAppContext packagedAppContext,
+        IConfiguration configuration,
+        IPolicyRegistryReader policyReader,
         IOptions<GraphOptions> graphOptions,
         IOptions<MicOptions> micOptions,
         ILogger<TrayApplicationContext> logger)
     {
+        _configuration = configuration;
+        _policyReader = policyReader;
         _presenceClient = presenceClient;
         _authService = authService;
         _micDetector = micDetector;
@@ -64,6 +73,7 @@ public sealed class TrayApplicationContext : ApplicationContext
         menu.Items.Add(startupItem);
         _ = InitializeStartupItemAsync(startupItem);
 
+        menu.Items.Add("Settings…", null, (_, _) => OpenSettings());
         menu.Items.Add("Open settings file", null, (_, _) => OpenSettingsFile());
         menu.Items.Add("Exit", null, (_, _) => ExitThread());
 
@@ -224,6 +234,73 @@ public sealed class TrayApplicationContext : ApplicationContext
         await PollGraphAsync().ConfigureAwait(true);
     }
 
+    private void OpenSettings()
+    {
+        if (_settingsForm is not null)
+        {
+            _settingsForm.Activate();
+            return;
+        }
+
+        PolicyManagedSettings managed;
+        try
+        {
+            // Reloading first means the window shows any hand edits to the settings file, and
+            // policy changes since startup.
+            ReloadConfiguration();
+            managed = PolicyManagedSettings.From(_policyReader.ReadValues());
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to read settings.");
+            _icon.ShowBalloonTip(5000, "BUSY Bar on call agent", $"Couldn't read your settings: {ex.Message}", ToolTipIcon.Error);
+            return;
+        }
+
+        _settingsForm = new SettingsForm(
+            Bind<BusyBarOptions>(BusyBarOptions.SectionName),
+            Bind<MicOptions>(MicOptions.SectionName),
+            managed,
+            SaveSettings);
+        _settingsForm.FormClosed += (_, _) =>
+        {
+            _settingsForm.Dispose();
+            _settingsForm = null;
+        };
+        _settingsForm.Show();
+        _settingsForm.Activate();
+    }
+
+    private void SaveSettings(UserSettings settings)
+    {
+        UserSettingsStore.Save(UserConfigLocation.AppPath, settings);
+        ReloadConfiguration();
+
+        var busyBar = Bind<BusyBarOptions>(BusyBarOptions.SectionName);
+        var mic = Bind<MicOptions>(MicOptions.SectionName);
+
+        _timerController.Reconnect(busyBar.CreateClient());
+
+        // Binding here skips the startup validation, so guard against a zero or negative interval.
+        _micTimer.Interval = Math.Max(1, mic.PollIntervalSeconds) * 1000;
+        if (mic.Enabled)
+        {
+            _micTimer.Start();
+        }
+        else
+        {
+            _micTimer.Stop();
+            _latestMicActive = false;
+        }
+
+        _ = ApplyStateAsync();
+    }
+
+    private void ReloadConfiguration() => ((IConfigurationRoot)_configuration).Reload();
+
+    private T Bind<T>(string sectionName) where T : new() =>
+        _configuration.GetSection(sectionName).Get<T>() ?? new T();
+
     private void OpenSettingsFile()
     {
         var path = UserConfigLocation.GetShellPath(_packagedAppContext.IsPackaged);
@@ -292,6 +369,7 @@ public sealed class TrayApplicationContext : ApplicationContext
     {
         if (disposing)
         {
+            _settingsForm?.Close();
             _graphTimer.Stop();
             _graphTimer.Dispose();
             _micTimer.Stop();

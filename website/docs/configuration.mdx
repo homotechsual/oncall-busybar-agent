@@ -4,6 +4,24 @@ sidebar_position: 3
 
 # Configuration
 
+## The settings window
+
+Right-click the tray icon and choose **Settings…** to change the three things most people need:
+
+- **BUSY Bar address.** `10.0.4.20` is the USB connection. Over Wi-Fi, use the bar's IP address
+  or hostname.
+- **HTTP API password**, if you connect over Wi-Fi and gave the HTTP API one.
+- **Show me as on a call while an app is using my microphone.** Turn it off to rely on Teams
+  presence alone.
+
+**Test connection** checks the address and password against the bar before you save. Changes take
+effect as soon as you save, with no restart. Anything your organization manages through policy is
+shown but locked.
+
+Everything else lives in the settings file described below.
+
+## Where settings come from
+
 Settings come from four places. Each one overrides the ones above it:
 
 1. **The bundled defaults**, in the `appsettings.json` installed alongside the app
@@ -15,7 +33,8 @@ Settings come from four places. Each one overrides the ones above it:
    data instead, at
    `%LOCALAPPDATA%\Packages\MJCOLtd.OnCallBusyBarAgent_<id>\LocalCache\Local\oncall-busybar-agent\`,
    and Windows removes it when you uninstall. **Open settings file** in the tray menu opens
-   whichever one you have. Restart the agent after saving.
+   whichever one you have. Restart the agent after editing it by hand, or open **Settings…** and
+   save, which also reloads the file.
 3. **Environment variables and command-line arguments**, using a double underscore for nesting in
    environment variables (for example `Graph__ClientId`).
 4. **Registry policy**, set by IT through Intune or Group Policy. See
@@ -30,14 +49,17 @@ Settings come from four places. Each one overrides the ones above it:
 | `Mic:PollIntervalSeconds` | `5` | How often to check the microphone, in seconds. |
 | `BusyBar:Address` | `10.0.4.20` | The BUSY Bar's address. The default is its USB connection. |
 | `BusyBar:HttpAccessPassword` | (empty) | The password for the BUSY Bar's HTTP API, if you connect over Wi-Fi and set one. Not needed over USB. |
+| `BusyBar:HttpAccessPasswordProtected` | (empty) | The same password, encrypted, as the settings window saves it. Set by the window, not by hand. A non-empty `HttpAccessPassword` takes precedence over it. |
 
 ## Connecting over Wi-Fi
 
 The agent talks to the BUSY Bar over USB by default, at `10.0.4.20`. To use Wi-Fi, turn on the
-HTTP API on the device and set `BusyBar:Address` to its IP address or hostname. If you gave the
-HTTP API a password, put it in `BusyBar:HttpAccessPassword`. It's worth setting one: without it,
-anyone on the same network can control the device.
+HTTP API on the device, then enter its IP address or hostname and the password in **Settings…**.
+It's worth setting a password: without it, anyone on the same network can control the device.
 
-The password is stored as plain text, in `appsettings.json` or the registry. The device's HTTP API
-doesn't use encryption either, so the password crosses your network in the clear. It keeps out
+The settings window stores the password encrypted for your Windows account, so only you, on this
+PC, can read it back. Copying the settings file to another PC or account doesn't carry the
+password over; enter it again there. A password set by hand in `BusyBar:HttpAccessPassword`, or by
+policy in the registry, is plain text. The device's HTTP API doesn't use encryption either, so the
+password crosses your network in the clear. It keeps out
 casual access, but not someone who can watch your network traffic.

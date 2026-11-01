@@ -23,17 +23,29 @@ public sealed class BusyBarTimerController
 
     private static readonly TimeSpan ReapplyThreshold = TimeSpan.FromSeconds(60);
 
-    private readonly BusyBar _bar;
+    private BusyBar _bar;
     private OnCallState _lastApplied = new NotOnCall();
+    private bool _reapplyNext;
 
     public BusyBarTimerController(BusyBar bar)
     {
         _bar = bar;
     }
 
+    /// <summary>Switches to a new connection after the settings change. The next
+    /// <see cref="ApplyAsync"/> always sends its state, since the bar on the other end may not be
+    /// showing what was last applied.</summary>
+    public void Reconnect(BusyBar bar)
+    {
+        var previous = _bar;
+        _bar = bar;
+        _reapplyNext = true;
+        previous.Dispose();
+    }
+
     public async Task ApplyAsync(OnCallState state, CancellationToken cancellationToken)
     {
-        if (!NeedsReapply(_lastApplied, state))
+        if (!_reapplyNext && !NeedsReapply(_lastApplied, state))
         {
             return;
         }
@@ -42,6 +54,7 @@ public sealed class BusyBarTimerController
         var snapshot = new BusySnapshot(snapshotState, DateTimeOffset.UtcNow.ToUnixTimeMilliseconds());
         await _bar.BusySnapshotSetAsync(snapshot, cancellationToken: cancellationToken).ConfigureAwait(false);
         _lastApplied = state;
+        _reapplyNext = false;
     }
 
     internal static bool NeedsReapply(OnCallState previous, OnCallState next) => (previous, next) switch

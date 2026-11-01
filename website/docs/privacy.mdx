@@ -58,7 +58,8 @@ microphone use goes anywhere else.
 - **The sign-in token cache**, at `%LOCALAPPDATA%\oncall-busybar-agent\msal_cache.bin`, so you
   stay signed in between runs. Microsoft's sign-in library manages it, and Windows encrypts it for
   your user account.
-- **Your settings file**, `appsettings.json`, in the same folder.
+- **Your settings file**, `appsettings.json`, in the same folder. If you enter a BUSY Bar HTTP API
+  password in the settings window, it's stored there encrypted for your user account.
 
 Both belong to your Windows user account and the app never sends them anywhere. The Store and
 MSIX versions keep them in their package data

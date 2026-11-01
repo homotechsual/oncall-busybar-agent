@@ -1,4 +1,3 @@
-using Busy.Bar;
 using OncallAgent;
 using OncallAgent.Config;
 using OncallAgent.Graph;
@@ -73,14 +72,8 @@ try
     builder.Services.AddSingleton<IMicrophoneRegistryReader, Win32MicrophoneRegistryReader>();
     builder.Services.AddSingleton<MicrophoneActivityDetector>();
     builder.Services.AddSingleton(provider =>
-    {
-        var options = provider.GetRequiredService<IOptions<OncallAgent.BusyBarOptions>>().Value;
-        return new BusyBar(new Busy.Bar.BusyBarOptions
-        {
-            Addr = options.Address,
-            HttpAccessPassword = string.IsNullOrEmpty(options.HttpAccessPassword) ? null : options.HttpAccessPassword
-        });
-    });
+        provider.GetRequiredService<IOptions<OncallAgent.BusyBarOptions>>().Value.CreateClient());
+    builder.Services.AddSingleton<IPolicyRegistryReader, Win32PolicyRegistryReader>();
     builder.Services.AddSingleton<BusyBarTimerController>();
     builder.Services.AddSingleton<IPackagedAppContext, PackagedAppContext>();
     builder.Services.AddSingleton<IStartupShortcutManager>(provider =>
