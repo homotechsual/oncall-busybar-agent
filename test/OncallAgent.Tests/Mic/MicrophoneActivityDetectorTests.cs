@@ -86,7 +86,7 @@ public class MicrophoneActivityDetectorTests
     {
         // Reproduces a real bug: an old Discord version's mic-consent registry entry, orphaned by
         // Discord's auto-updater moving to a new versioned exe path, had LastUsedTimeStart from six
-        // months ago and no LastUsedTimeStop ever recorded — permanently satisfying the old
+        // months ago and no LastUsedTimeStop ever recorded, permanently satisfying the old
         // unbounded "never stopped means active" rule, long after any real call had ended.
         var usages = new[]
         {

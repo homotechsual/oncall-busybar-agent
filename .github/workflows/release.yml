@@ -1,12 +1,8 @@
 name: Release
 
-# Tag-triggered signed release: one MSI per architecture plus a sideload MSIX bundle, all signed via
-# Azure Artifact Signing and attached to a GitHub Release. The Store MSIX (build-msix.yml) is
-# separate and unsigned, since the Store re-signs it after certification.
-#
-# Signing jobs authenticate over OIDC and run under the "release" environment, which the Entra
-# federated credential's subject is scoped to -- see OncallAgent.Msi/README.md for the one-time
-# Azure setup and the repo variables read below.
+# Builds an MSI per architecture and a sideload MSIX bundle, signs them with Azure Artifact
+# Signing and attaches them to a GitHub Release. Azure setup is in OncallAgent.Msi/README.md.
+# Signing jobs run in the "release" environment because the federated credential is scoped to it.
 
 on:
   push:
@@ -105,8 +101,7 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      # Signs the app's own binaries before they're harvested into the MSI. The .NET runtime files
-      # in a self-contained publish are already Microsoft-signed; only OncallAgent.exe/.dll are ours.
+      # The runtime files are already signed by Microsoft; only the exe and dll are ours.
       - name: Sign the published app
         uses: azure/artifact-signing-action@v2
         with:
@@ -130,8 +125,7 @@ jobs:
             -p:PublishDir=$publishDir `
             -p:Configuration=Release
 
-      # All three architectures otherwise produce identically-named MSIs, which would collide once
-      # gathered into one directory in the release job below.
+      # Every architecture builds OncallAgent.Msi.msi, so give each a unique name.
       - name: Rename MSI with architecture suffix
         id: msi
         shell: pwsh
@@ -141,8 +135,7 @@ jobs:
           Move-Item -Path $msi.FullName -Destination $dest
           "path=$dest" >> $env:GITHUB_OUTPUT
 
-      # The exe's signature doesn't cover the MSI container; Windows needs both signed independently
-      # to show a trusted publisher on install.
+      # Signing the exe doesn't sign the MSI around it.
       - name: Sign the MSI
         uses: azure/artifact-signing-action@v2
         with:
@@ -182,9 +175,8 @@ jobs:
       - name: Setup MSBuild
         uses: microsoft/setup-msbuild@v3
 
-      # A signed MSIX only installs if the manifest's Publisher exactly matches the signing
-      # certificate's subject, which differs from the Store identity checked into the manifest.
-      # Rewritten here for this build only; the Store build (build-msix.yml) is unaffected.
+      # The manifest's Publisher must match the certificate subject exactly. The checked-in value
+      # is the Store identity, so swap it for this build.
       - name: Set sideload package identity
         shell: pwsh
         env:
@@ -204,8 +196,7 @@ jobs:
       - name: Restore packaging project
         run: msbuild OncallAgent.Package/OncallAgent.Package.wapproj /t:Restore /p:Configuration=Release
 
-      # Same SDK pin as build-msix.yml, and for the same reason it goes through
-      # PackageTargetPlatformVersion rather than /p:TargetPlatformVersion (see that workflow).
+      # See build-msix.yml for why this is PackageTargetPlatformVersion.
       - name: Build sideload MSIX bundle
         run: >
           msbuild OncallAgent.Package/OncallAgent.Package.wapproj

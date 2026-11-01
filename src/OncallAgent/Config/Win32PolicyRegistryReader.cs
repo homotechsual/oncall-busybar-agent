@@ -4,7 +4,7 @@ namespace OncallAgent.Config;
 
 /// <summary>Reads IT-managed policy overrides from HKLM\SOFTWARE\Policies\OncallBusyBarAgent, one
 /// subkey per appsettings.json section (Graph, Mic, BusyBar) and one registry value per config key
-/// within it — the standard "machine policy" registry convention (matching how e.g. Chrome and
+/// within it. This is the standard "machine policy" registry convention (matching how e.g. Chrome and
 /// Edge expose IT-managed settings), so any MDM tool (Intune Settings Catalog, a plain deployment
 /// script, Group Policy) can populate it without this app caring how the values got there.</summary>
 public sealed class Win32PolicyRegistryReader : IPolicyRegistryReader

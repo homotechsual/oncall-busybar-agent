@@ -10,7 +10,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 
-// Must run before any Win32Window-backed control is created anywhere in the process — including
+// Must run before any Win32Window-backed control is created anywhere in the process, including
 // the NotifyIcon/ContextMenuStrip TrayApplicationContext's constructor creates below, and the
 // MessageBox.Show call in the catch block below. Moved to the very top so it also covers the
 // config-bootstrap step, which now runs before the host is built.
@@ -21,7 +21,7 @@ try
 {
     // ContentRootPath defaults to Environment.CurrentDirectory, which for a GUI app depends entirely
     // on how it was launched (a shortcut's "Start in" folder, the shell's cwd when using `dotnet run
-    // --project`, Explorer's cwd on double-click, etc.) — none of which reliably points at this
+    // --project`, Explorer's cwd on double-click, etc.), none of which reliably points at this
     // executable's own folder, where appsettings.json actually lives (copied there at build time).
     // Pinning it to AppContext.BaseDirectory makes config loading independent of launch context.
     var builder = Host.CreateApplicationBuilder(new HostApplicationBuilderSettings
@@ -41,7 +41,7 @@ try
         Path.Combine(AppContext.BaseDirectory, "appsettings.json"),
         userConfigPath);
     // Insert right before the environment-variables source (already added by Host.CreateApplicationBuilder's
-    // defaults) rather than appending, so env vars and command-line args still override this file — appending
+    // defaults) rather than appending, so env vars and command-line args still override this file. Appending
     // would rank this above them, and since it's a full copy of every key, that left nothing for a lower layer
     // to actually override.
     builder.Configuration.AddJsonFile(userConfigPath, optional: true, reloadOnChange: false);

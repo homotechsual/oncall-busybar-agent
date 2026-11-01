@@ -4,10 +4,10 @@ using Xunit;
 
 namespace OncallAgent.Tests.Config;
 
-/// <summary>Replicates the exact source order Program.cs builds — bundled JSON, LocalAppData JSON,
-/// env vars, command line, registry policy, lowest to highest precedence — using in-memory/fake
-/// sources so it doesn't touch the real file system or registry. This pins the regression Fix 2
-/// corrects: the LocalAppData layer must rank below env vars/command line, not above.</summary>
+/// <summary>Replicates the exact source order Program.cs builds (bundled JSON, LocalAppData JSON,
+/// env vars, command line, registry policy, lowest to highest precedence) using in-memory/fake
+/// sources so it doesn't touch the real file system or registry. This pins down an earlier regression
+/// where the LocalAppData layer ranked above env vars/command line; it must rank below them.</summary>
 public class ConfigurationPrecedenceTests
 {
     [Fact]

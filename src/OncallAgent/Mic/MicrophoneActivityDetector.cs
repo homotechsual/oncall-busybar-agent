@@ -3,7 +3,7 @@ namespace OncallAgent.Mic;
 public sealed class MicrophoneActivityDetector
 {
     // A "never stopped" entry does not reliably mean an app is still recording right now: Windows
-    // leaves this permanently unset for any executable that never runs again — for example an
+    // leaves this permanently unset for any executable that never runs again. For example, an
     // auto-updater (Discord, etc.) that moves to a new versioned exe path on every update abandons
     // the old path's registry entry mid-session, sometimes for months. Confirmed live: a stale
     // entry like that, months old, kept this permanently "active" long after any real call ended.

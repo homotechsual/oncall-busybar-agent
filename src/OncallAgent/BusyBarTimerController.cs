@@ -11,7 +11,7 @@ public sealed class BusyBarTimerController
     // A device's two BUSY timer profile slots have fixed, firmware-assigned IDs, not
     // user/caller-chosen ones: BusySnapshotSetAsync rejects any other CardId with
     // "400 Bad Request: Failed to parse snapshot" (confirmed against a real device). This is the
-    // "Busy" slot's ID (BusyProfileSlot.Busy, title "BUSY") — the built-in profile, appropriate
+    // "Busy" slot's ID (BusyProfileSlot.Busy, title "BUSY"), the built-in profile, appropriate
     // for an automated on-call indicator rather than the user-configurable "Custom" slot.
     private const string CardId = "00000000-0000-0000-0000-000000000000";
 

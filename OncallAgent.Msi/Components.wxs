@@ -14,7 +14,7 @@
           Target="[INSTALLFOLDER]OncallAgent.exe"
           WorkingDirectory="INSTALLFOLDER" />
         <RemoveFolder Id="RemoveAppProgramMenuFolder" On="uninstall" />
-        <!-- Per-machine keypath for a file-less component (WiX requires exactly one keypath). -->
+        <!-- A component needs a keypath and this one has no file. -->
         <RegistryValue Root="HKLM" Key="Software\homotechsual\OncallBusyBarAgent" Name="Installed" Type="integer" Value="1" KeyPath="yes" />
       </Component>
     </ComponentGroup>

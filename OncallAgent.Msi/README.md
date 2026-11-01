@@ -1,102 +1,88 @@
 # Signed release pipeline
 
-This folder contains the WiX v7 project that builds the per-machine MSI installers attached to
-each GitHub Release. `.github/workflows/release.yml` builds those MSIs (one per architecture) plus
-a sideload MSIX bundle from `OncallAgent.Package`, and signs all of them via Azure Artifact
-Signing. The Store MSIX (`.github/workflows/build-msix.yml`) is separate and unsigned, since the
-Store re-signs it after certification.
+This folder holds the WiX v7 project for the per-machine MSI installers. On each release,
+`.github/workflows/release.yml` builds an MSI per architecture plus a sideload MSIX bundle and
+signs them all with Azure Artifact Signing. The Store package (`build-msix.yml`) stays unsigned,
+because the Store signs it after certification.
 
-Building the MSI itself needs only the .NET SDK (see the Development docs page). The project
-accepts the WiX v7 Open Source Maintenance Fee EULA via `<AcceptEula>wix7</AcceptEula>`; see
-https://docs.firegiant.com/wix/osmf/ for the sponsorship terms that come with it.
+You only need the .NET SDK to build the MSI (see the Development docs page). The project accepts
+the WiX v7 Open Source Maintenance Fee EULA with `<AcceptEula>wix7</AcceptEula>`; the sponsorship
+terms are at <https://docs.firegiant.com/wix/osmf/>.
 
 Signing needs the one-time Azure setup below.
 
 ## One-time Azure setup
 
-1. Register the resource provider (once per Azure subscription):
+1. Register the resource provider (once per subscription):
 
    ```bash
    az provider register --namespace "Microsoft.CodeSigning"
    ```
 
-2. Create an Artifact Signing account and a **Public Trust** certificate profile, under the
-   **Organization** identity validation path. MJCO's Organization identity validation is already
-   approved, so this only needs the account and certificate profile themselves:
+2. Create an Artifact Signing account and a **Public Trust** certificate profile using the
+   **Organization** identity validation (MJCO's is already approved):
 
    ```bash
    az artifact-signing create -n <account-name> -l <region> -g <resource-group> --sku Basic
-   az artifact-signing certificate-profile create -g <resource-group> --account-name <account-name> -n <profile-name> --profile-type PublicTrust --identity-validation-id <the approved MJCO identity validation's ID>
+   az artifact-signing certificate-profile create -g <resource-group> --account-name <account-name> -n <profile-name> --profile-type PublicTrust --identity-validation-id <identity-validation-id>
    ```
 
-   Artifact Signing requires a **paid** Azure subscription; it does not work on free, trial or
-   sponsored subscriptions. If creating the certificate profile in the Azure Portal instead, leave
-   **Program Type** at its default of **None** (it only matters for ELAM/antimalware enrollment).
+   This needs a paid subscription; free, trial and sponsored ones don't work. In the Portal, leave
+   **Program Type** as **None**.
 
-3. Note the account's regional endpoint URL (e.g. `https://weu.codesigning.azure.net` for West
-   Europe), and the certificate profile's **subject name** as shown on the profile in the Portal
-   (e.g. `CN=MJCO Ltd, O=MJCO Ltd, L=London, C=GB`). The MSIX manifest's `Publisher` must match
-   that subject exactly, character for character, or the signed bundle won't install.
+3. Note the account's regional endpoint (e.g. `https://weu.codesigning.azure.net`) and the
+   certificate profile's subject name (e.g. `CN=MJCO, O=MJCO, L=Cardiff, S=Cardiff, C=GB`). The
+   MSIX `Publisher` has to match the subject exactly or the bundle won't install.
 
-4. Create an Entra app registration for CI signing, separate from the app's own Graph sign-in
-   registration:
+4. Create an app registration for CI signing, separate from the app's Graph sign-in registration:
 
    ```bash
-   az ad app create --display-name "oncall-busybar-agent-ci-signing"
+   az ad app create --display-name "CI Signing"
    az ad sp create --id <app-id>
    ```
 
-5. Add a federated credential on that app registration, scoped to a GitHub Environment
-   (federated credential subjects don't support wildcards, so a tag-based subject would need
-   updating for every release):
+5. Add a federated credential to it, scoped to the `release` GitHub Environment:
 
    ```bash
    az ad app federated-credential create --id <app-id> --parameters credential.json
    ```
 
-   where `credential.json` is:
-
    ```json
    {
-       "name": "oncall-busybar-agent-release",
+       "name": "GitHubCI",
        "issuer": "https://token.actions.githubusercontent.com",
        "subject": "repo:homotechsual@2288257/oncall-busybar-agent@1331290728:environment:release",
-       "description": "GitHub Actions release workflow, signing jobs",
        "audiences": ["api://AzureADTokenExchange"]
    }
    ```
 
-   This repo uses GitHub's immutable OIDC subject format, which embeds the owner and repo IDs
-   (`homotechsual@2288257`, `oncall-busybar-agent@1331290728`) so the credential can't be matched
-   by a renamed or re-created repo. The plain `repo:homotechsual/oncall-busybar-agent:...` form
-   fails with `AADSTS700213`. Confirm the current prefix with
+   GitHub sends subjects in the immutable format, with the owner and repo IDs in them. The plain
+   `repo:homotechsual/oncall-busybar-agent:...` form fails with `AADSTS700213`. To check the
+   current prefix:
    `gh api repos/homotechsual/oncall-busybar-agent/actions/oidc/customization/sub`.
 
-   Then create the matching GitHub Environment: **Settings → Environments → New environment**,
-   named `release`. The workflow's signing jobs declare `environment: release`.
+   Then create the environment in GitHub: **Settings → Environments → New environment**, named
+   `release`.
 
-6. Grant the app registration's service principal the **Artifact Signing Certificate Profile
-   Signer** role, scoped to the certificate profile:
+6. Give the app's service principal the **Artifact Signing Certificate Profile Signer** role on the
+   certificate profile:
 
    ```bash
    az role assignment create --assignee <app-id> --role "Artifact Signing Certificate Profile Signer" --scope <certificate-profile-resource-id>
    ```
 
-7. Set these as Actions **secrets**, either on the repository or on the `release` environment
-   (Settings → Secrets and variables → Actions, or Settings → Environments → release). None of
-   them is a credential (OIDC means there's no client secret), but keeping them as secrets keeps
-   tenant/subscription IDs out of the logs:
+7. Add these Actions secrets, on the repository or the `release` environment. None of them is a
+   credential (OIDC has no client secret), but secrets keep them out of the logs.
 
    | Secret | Value |
    | --- | --- |
-   | `AZURE_CLIENT_ID` | The app registration's Application (client) ID from step 4. |
-   | `AZURE_TENANT_ID` | Your Entra tenant ID. |
-   | `AZURE_SUBSCRIPTION_ID` | The subscription the Artifact Signing account lives in. |
-   | `AZURE_ARTIFACT_SIGNING_ENDPOINT` | The regional endpoint URL from step 3. |
-   | `AZURE_ARTIFACT_SIGNING_ACCOUNT` | The Artifact Signing account name from step 2. |
-   | `AZURE_ARTIFACT_SIGNING_PROFILE` | The certificate profile name from step 2. |
-   | `AZURE_ARTIFACT_SIGNING_PUBLISHER` | The certificate subject name from step 3, used as the sideload MSIX's `Publisher`. |
+   | `AZURE_CLIENT_ID` | Application (client) ID from step 4 |
+   | `AZURE_TENANT_ID` | Entra tenant ID |
+   | `AZURE_SUBSCRIPTION_ID` | Subscription holding the signing account |
+   | `AZURE_ARTIFACT_SIGNING_ENDPOINT` | Endpoint from step 3 |
+   | `AZURE_ARTIFACT_SIGNING_ACCOUNT` | Account name from step 2 |
+   | `AZURE_ARTIFACT_SIGNING_PROFILE` | Certificate profile name from step 2 |
+   | `AZURE_ARTIFACT_SIGNING_PUBLISHER` | Subject name from step 3 |
 
-Once that's done, pushing a tag matching `v*.*.*` (for example `v1.0.0`) runs the release
-workflow. Run it with **workflow_dispatch** first to check signing works without publishing a
-release.
+After that, pushing a `v*.*.*` tag runs the release. A manual run (workflow_dispatch) builds and
+signs everything without publishing, which is handy for testing.

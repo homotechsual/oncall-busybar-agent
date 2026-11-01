@@ -9,7 +9,7 @@ internal sealed class FakeHttpMessageHandler : HttpMessageHandler
     public HttpRequestMessage? LastRequest => Requests.Count > 0 ? Requests[^1] : null;
     public string? LastRequestBody { get; private set; }
 
-    /// <summary>Every request body seen so far, in order — unlike <see cref="LastRequestBody"/>,
+    /// <summary>Every request body seen so far, in order. Unlike <see cref="LastRequestBody"/>,
     /// lets a test verify content varied across several requests.</summary>
     public List<string?> RequestBodies { get; } = new();
 

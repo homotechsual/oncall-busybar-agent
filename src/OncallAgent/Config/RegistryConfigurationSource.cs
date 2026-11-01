@@ -4,7 +4,7 @@ namespace OncallAgent.Config;
 
 public sealed class RegistryConfigurationSource : IConfigurationSource
 {
-    /// <summary>Optional reader override for tests — a hermetic precedence test needs to supply a
+    /// <summary>Optional reader override for tests: a hermetic precedence test needs to supply a
     /// fake in place of the real registry. Defaults to null, which falls back to
     /// <see cref="Win32PolicyRegistryReader"/>, so existing callers (e.g.
     /// <see cref="RegistryConfigurationExtensions.AddOncallAgentPolicyOverrides"/>) need no changes.</summary>
@@ -17,7 +17,7 @@ public sealed class RegistryConfigurationSource : IConfigurationSource
 public static class RegistryConfigurationExtensions
 {
     /// <summary>Adds the HKLM\SOFTWARE\Policies\OncallBusyBarAgent registry policy layer as the
-    /// highest-precedence configuration source — call this last, after every other
+    /// highest-precedence configuration source. Call this last, after every other
     /// AddJsonFile/AddEnvironmentVariables call.</summary>
     public static IConfigurationBuilder AddOncallAgentPolicyOverrides(this IConfigurationBuilder builder) =>
         builder.Add(new RegistryConfigurationSource());

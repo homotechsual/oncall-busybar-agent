@@ -1,13 +1,6 @@
 name: Build MSIX package
 
-# Prototype for the build half of MSIX CI (see docs/superpowers/plans/2026-08-11-msix-packaging.md
-# Global Constraints: CI/CD *submission* automation is separately out of scope for that plan --
-# this workflow only produces a .msixupload artifact, it does not submit to Partner Center).
-#
-# Not yet verified against a real run: this repo has no GitHub remote configured yet, so this has
-# only been checked against GitHub's published windows-latest runner-image software manifest, not
-# an actual execution. Confirm on the first real push before trusting it, especially the
-# TargetPlatformVersion override below (see comment on that step).
+# Builds the Store .msixupload. Submission to Partner Center is still manual.
 
 on:
   workflow_dispatch:
@@ -39,27 +32,16 @@ jobs:
       - name: Run tests
         run: dotnet test test/OncallAgent.Tests/OncallAgent.Tests.csproj --configuration Release --no-restore
 
-      # Restores OncallAgent.Package.wapproj itself -- it has its own separate restore because it's
-      # a legacy (non-SDK-style) project type; `dotnet restore` above only covers the plain .NET
-      # projects, not the packaging project.
+      # The .wapproj isn't SDK-style, so `dotnet restore` doesn't cover it.
       - name: Restore packaging project
         run: msbuild OncallAgent.Package/OncallAgent.Package.wapproj /t:Restore /p:Configuration=Release
 
-      # StoreUpload mode produces the .msixupload Partner Center expects and needs no signing --
-      # the Store re-signs it after certification, so AppxPackageSigningEnabled=false is correct
-      # here, not a shortcut. This is the opposite of the local sideload-testing flow, which does
-      # need the test certificate.
+      # Unsigned on purpose: the Store signs the package after certification.
       #
-      # The packaging project's TargetPlatformVersion is pinned to 10.0.26100.0 here specifically
-      # for CI, overriding whatever the checked-in .wapproj says (10.0.28000.0 as of this
-      # workflow's creation) -- confirmed via GitHub's windows-latest runner-image software
-      # manifest that 10.0.26100.0 is the newest Windows SDK actually installed there. If VS's own
-      # installed SDK version changes later, re-check this against the runner image's current
-      # manifest rather than assuming the pinned value still matches.
-      #
-      # This goes through PackageTargetPlatformVersion (read only by the .wapproj), never
-      # /p:TargetPlatformVersion: global properties flow into OncallAgent.csproj, where that
-      # override swaps the Windows SDK projection pack and fails the build with NETSDK1112.
+      # 10.0.26100.0 is the newest Windows SDK on windows-latest; the .wapproj targets a newer one
+      # locally. Pass it as PackageTargetPlatformVersion, not TargetPlatformVersion: global
+      # properties flow into OncallAgent.csproj, and overriding TargetPlatformVersion there swaps
+      # the Windows SDK projection pack and fails with NETSDK1112.
       - name: Build and publish MSIX bundle
         run: >
           msbuild OncallAgent.Package/OncallAgent.Package.wapproj
@@ -72,9 +54,6 @@ jobs:
           /p:PackageTargetPlatformVersion=10.0.26100.0
           /p:AppxPackageDir=AppPackages\
 
-      # Uploads the whole output folder rather than guessing the exact produced filename/extension
-      # (.msixupload vs .appxupload) -- confirm the real output on the first run and narrow this if
-      # the extra files (symbols, logs) turn out to be worth trimming.
       - name: Upload package artifact
         uses: actions/upload-artifact@v7
         with:

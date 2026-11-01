@@ -9,7 +9,7 @@ namespace OncallAgent;
 ///
 /// Builds the .lnk via the classic IShellLinkW/IPersistFile COM interfaces (declared below)
 /// instead of a Windows Script Host wrapper package, since WSH's interop assembly is a
-/// .NET Framework-only artifact with no modern-.NET target — these two COM interfaces are part
+/// .NET Framework-only artifact with no modern-.NET target. These two COM interfaces are part
 /// of the Windows Shell itself and are fully supported from any .NET Core+ app on Windows.
 /// </summary>
 public sealed class StartupShortcutManager : IStartupShortcutManager

@@ -148,7 +148,7 @@ public sealed class TrayApplicationContext : ApplicationContext
         };
 
         return _lastGraphPollFailed
-            ? $"{summary} (last Graph poll failed — signed out?)"
+            ? $"{summary} (last Graph poll failed; signed out?)"
             : summary;
     }
 
@@ -165,7 +165,7 @@ public sealed class TrayApplicationContext : ApplicationContext
         }
         catch (Exception ex)
         {
-            // The packaged app has no console, so a log-only failure is invisible to the user —
+            // The packaged app has no console, so a log-only failure is invisible to the user;
             // a balloon tip is the only way a background tray app can surface an error at all.
             _logger.LogWarning(ex, "Sign in failed.");
             _icon.ShowBalloonTip(5000, "BUSY Bar on call agent", $"Sign in failed: {ex.Message}", ToolTipIcon.Error);
@@ -220,7 +220,7 @@ public sealed class TrayApplicationContext : ApplicationContext
                     startupItem.Checked = !startupItem.Checked;
                     _suppressStartupCheckedChanged = false;
                     _icon.ShowBalloonTip(5000, "BUSY Bar on call agent",
-                        "Windows didn't apply that change — startup may be managed by policy.", ToolTipIcon.Warning);
+                        "Windows didn't apply that change. Startup may be managed by policy.", ToolTipIcon.Warning);
                 }
             }
             catch (Exception ex)

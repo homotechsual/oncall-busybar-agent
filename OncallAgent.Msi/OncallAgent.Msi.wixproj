@@ -5,8 +5,7 @@
     <InstallerPlatform>$(Platform)</InstallerPlatform>
     <OutputPath>bin\$(Platform)\$(Configuration)\</OutputPath>
     <DefineConstants>Version=$(Version)</DefineConstants>
-    <!-- ICE38/43/57 assume ProgramMenuFolder is per-user and want an HKCU keypath for the shortcut
-         component. In this perMachine package it's the All Users Start Menu, so HKLM is correct. -->
+    <!-- These ICEs expect a per-user Start Menu. This package is per-machine, so HKLM is right. -->
     <SuppressIces>ICE38;ICE43;ICE57</SuppressIces>
   </PropertyGroup>
 
