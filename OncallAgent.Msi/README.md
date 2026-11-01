@@ -90,8 +90,48 @@ signs everything without publishing, which is handy for testing.
 ## Microsoft Store
 
 The release run also builds an unsigned `.msixupload` for the Store, as the
-`store-msixupload-<version>` artifact. It isn't attached to the GitHub release. Upload it to a new
-submission in Partner Center (Store ID `9P1XRPJT3126`).
+`store-msixupload-<version>` artifact. It isn't attached to the GitHub release. On a tag push, the
+`store-submit` job uploads it to Partner Center (Store ID `9P1XRPJT3126`) and submits it for
+certification, keeping the listing from the last published submission. Manual runs build the
+package but don't submit it.
+
+The "What's new in this version" text comes from the annotated tag's message, so write the notes
+when you tag:
+
+```bash
+git tag -a v1.0.1 -m "Fixes the timer running on after you leave a meeting early."
+```
+
+A lightweight tag, or a message that's just the tag name, leaves the release notes blank. Partner
+Center won't take a new submission while one is still in certification; if that happens, re-run
+the job once the earlier one finishes.
+
+### One-time Partner Center setup
+
+1. Create an app registration for submissions, separate from the signing one, with a client
+   secret:
+
+   ```bash
+   az ad app create --display-name "Store Submission" --sign-in-audience AzureADMyOrg
+   az ad sp create --id <app-id>
+   az ad app credential reset --id <app-id> --display-name "GitHub release" --years 1
+   ```
+
+2. In Partner Center, under **Account settings → User management → Microsoft Entra
+   applications**, add the app with the **Developer** role. The Entra tenant has to be linked under
+   **Account settings → Tenants** first.
+
+3. Add these secrets to the `release` environment:
+
+   | Secret | Value |
+   | --- | --- |
+   | `PARTNER_CENTER_TENANT_ID` | Entra tenant ID |
+   | `PARTNER_CENTER_SELLER_ID` | **Account settings → Legal info → Developer → Seller ID** |
+   | `PARTNER_CENTER_CLIENT_ID` | Application (client) ID from step 1 |
+   | `PARTNER_CENTER_CLIENT_SECRET` | Client secret from step 1 |
+
+The client secret expires after a year. Reset it with the last command in step 1 and update the
+secret before then, or submissions start failing to sign in.
 
 `Package.appxmanifest` holds the Store identity from Partner Center's **Product identity** page.
 The sideload build swaps `Publisher` for the signing certificate's subject, so the two installs are

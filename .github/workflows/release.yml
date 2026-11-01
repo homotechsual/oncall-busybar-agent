@@ -1,8 +1,8 @@
 name: Release
 
 # Builds an MSI per architecture and a sideload MSIX bundle, signs them with Azure Artifact
-# Signing and attaches them to a GitHub Release. Also builds the Store .msixupload for Partner
-# Center. Azure setup is in OncallAgent.Msi/README.md.
+# Signing and attaches them to a GitHub Release. Also builds the Store .msixupload and, for tags,
+# submits it to Partner Center. Azure and Partner Center setup is in OncallAgent.Msi/README.md.
 # Signing jobs run in the "release" environment because the federated credential is scoped to it.
 
 on:
@@ -300,6 +300,77 @@ jobs:
           name: store-msixupload-${{ env.VERSION }}
           path: OncallAgent.Package/AppPackages/*.msixupload
           if-no-files-found: error
+
+  # Submits the Store package for certification on tag pushes, once everything else has built.
+  # The annotated tag's message becomes the "What's new" text. Partner Center setup is in
+  # OncallAgent.Msi/README.md.
+  store-submit:
+    needs: [version, msi, msix, store]
+    if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') }}
+    runs-on: windows-latest
+    environment: release
+    env:
+      VERSION: ${{ needs.version.outputs.version }}
+      PRODUCT_ID: 9P1XRPJT3126
+
+    steps:
+      - uses: actions/checkout@v7
+
+      # checkout doesn't fetch the tag object, so its message isn't available otherwise. A
+      # lightweight tag, or one whose message is just the tag name, gives no release notes.
+      - name: Read release notes from the tag
+        shell: pwsh
+        run: |
+          git fetch --force origin "refs/tags/${env:GITHUB_REF_NAME}:refs/tags/${env:GITHUB_REF_NAME}"
+          $type = git cat-file -t $env:GITHUB_REF_NAME
+          $notes = if ($type -eq 'tag') { (git tag -l --format='%(contents:subject)%0a%0a%(contents:body)' $env:GITHUB_REF_NAME | Out-String).Trim() } else { '' }
+          if ($notes -eq $env:GITHUB_REF_NAME) { $notes = '' }
+          # The Store's limit for release notes.
+          if ($notes.Length -gt 1500) { $notes = $notes.Substring(0, 1500) }
+          Set-Content -Path release-notes.txt -Value $notes -NoNewline
+          if ($notes) { "Release notes:`n$notes" } else { "No release notes in the tag" }
+
+      - name: Download Store package
+        uses: actions/download-artifact@v8
+        with:
+          name: store-msixupload-${{ env.VERSION }}
+          path: store
+
+      - name: Setup Microsoft Store Developer CLI
+        uses: microsoft/microsoft-store-apppublisher@v1.4
+
+      - name: Configure Microsoft Store Developer CLI
+        run: |
+          msstore settings --enableTelemetry false
+          msstore reconfigure --tenantId ${{ secrets.PARTNER_CENTER_TENANT_ID }} --sellerId ${{ secrets.PARTNER_CENTER_SELLER_ID }} --clientId ${{ secrets.PARTNER_CENTER_CLIENT_ID }} --clientSecret ${{ secrets.PARTNER_CENTER_CLIENT_SECRET }}
+
+      # publish replaces any pending draft with a copy of the last published submission, so the
+      # release notes have to be set after it, and the draft committed last.
+      - name: Upload package to a draft submission
+        shell: pwsh
+        run: |
+          $package = Get-ChildItem store -Filter *.msixupload | Select-Object -First 1
+          msstore publish $package.DirectoryName --inputFile $package.FullName --appId $env:PRODUCT_ID --noCommit
+          if ($LASTEXITCODE -ne 0) { throw "msstore publish failed" }
+
+      - name: Set release notes
+        shell: pwsh
+        run: |
+          $notes = Get-Content -Raw release-notes.txt -ErrorAction SilentlyContinue
+          if (-not $notes) { "Leaving release notes blank"; return }
+          $submission = msstore submission get $env:PRODUCT_ID | Out-String | ConvertFrom-Json
+          if ($LASTEXITCODE -ne 0) { throw "msstore submission get failed" }
+          $listing = $submission.Listings.'en-us'
+          if (-not $listing) { throw "The submission has no en-us listing" }
+          $listing.BaseListing.ReleaseNotes = $notes
+          msstore submission update $env:PRODUCT_ID ($submission | ConvertTo-Json -Depth 100 -Compress)
+          if ($LASTEXITCODE -ne 0) { throw "msstore submission update failed" }
+
+      - name: Submit for certification
+        shell: pwsh
+        run: |
+          msstore submission publish $env:PRODUCT_ID
+          if ($LASTEXITCODE -ne 0) { throw "msstore submission publish failed" }
 
   release:
     needs: [msi, msix]
