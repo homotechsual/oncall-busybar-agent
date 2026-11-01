@@ -46,7 +46,6 @@
   margin-top: 2rem;
 }
 
-.primary,
 .secondary {
   display: inline-flex;
   align-items: center;
@@ -55,23 +54,9 @@
   border-radius: 999px;
   font-weight: 600;
   text-decoration: none;
-  transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease;
-}
-
-.primary {
-  background: var(--site-signal);
-  color: #fff;
-}
-
-.primary:hover {
-  background: var(--site-signal-strong);
-  color: #fff;
-  text-decoration: none;
-}
-
-.secondary {
   border: 1px solid var(--site-line-strong);
   color: var(--site-heading);
+  transition: border-color 150ms ease, color 150ms ease;
 }
 
 .secondary:hover {

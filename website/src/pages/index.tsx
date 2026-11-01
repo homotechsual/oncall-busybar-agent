@@ -2,9 +2,9 @@ import type {ReactNode} from 'react';
 import Link from '@docusaurus/Link';
 import Layout from '@theme/Layout';
 import BusyBarDisplay from '@site/src/components/BusyBarDisplay';
+import StoreBadge, {STORE_URL} from '@site/src/components/StoreBadge';
 import styles from './index.module.css';
 
-const STORE_URL = 'https://apps.microsoft.com/detail/9P1XRPJT3126';
 const RELEASES_URL = 'https://github.com/homotechsual/oncall-busybar-agent/releases/latest';
 
 const situations = [
@@ -51,6 +51,7 @@ const installers = [
     detail: 'Updates itself. Also available with winget, and as a Store app in Intune.',
     href: STORE_URL,
     action: 'Open the Store listing',
+    badge: true,
   },
   {
     name: 'MSI',
@@ -80,9 +81,7 @@ export default function Home(): ReactNode {
               counts down to the end of scheduled meetings, and stops when you hang up.
             </p>
             <div className={styles.actions}>
-              <Link className={styles.primary} href={STORE_URL}>
-                Get it from Microsoft Store
-              </Link>
+              <StoreBadge />
               <Link className={styles.secondary} to="/getting-started">
                 Read the docs
               </Link>
@@ -143,7 +142,7 @@ export default function Home(): ReactNode {
               <div key={item.name} className={styles.installer}>
                 <h3>{item.name}</h3>
                 <p>{item.detail}</p>
-                <Link href={item.href}>{item.action}</Link>
+                {item.badge ? <StoreBadge /> : <Link href={item.href}>{item.action}</Link>}
               </div>
             ))}
           </div>
