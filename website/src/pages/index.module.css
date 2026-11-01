@@ -75,6 +75,43 @@
   margin-top: clamp(2.5rem, 6vw, 4rem);
 }
 
+/* Picks which captured status the bar replays. */
+.previewSwitch {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  width: fit-content;
+  max-width: 100%;
+  gap: 0.25rem;
+  margin: 0 auto 1rem;
+  padding: 0.25rem;
+  border: 1px solid var(--site-line-strong);
+  border-radius: 1.5rem;
+}
+
+.previewButton {
+  min-height: 2.25rem;
+  padding: 0 1rem;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--site-muted);
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 150ms ease, color 150ms ease;
+}
+
+.previewButton:hover {
+  color: var(--site-heading);
+}
+
+.previewButton[aria-pressed='true'] {
+  background: var(--site-heading);
+  color: var(--site-paper);
+}
+
 .caption {
   margin: 1rem 0 0;
   font-size: 0.95rem;

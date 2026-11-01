@@ -2,14 +2,12 @@ import {useEffect, useRef, type ReactNode} from 'react';
 import useBaseUrl from '@docusaurus/useBaseUrl';
 import styles from './BusyBarDisplay.module.css';
 
-// Frames captured from a real BUSY Bar's 72 by 16 front screen while it showed the on-call theme
-// with a countdown, 250 ms apart. They're stacked top to bottom in one PNG, and the last frame
-// leads straight back into the first.
+// Frames captured from a real BUSY Bar's 72 by 16 front screen, 250 ms apart, while it showed a
+// status theme with a countdown. Each strip stacks its frames top to bottom in one PNG, and its
+// last frame leads straight back into the first.
 const COLUMNS = 72;
 const ROWS = 16;
 const FRAME_MS = 250;
-// Shown on its own when the visitor prefers reduced motion: the countdown panel fully in view.
-const STILL_FRAME = 17;
 
 type Frames = {count: number; pixels: Uint8ClampedArray};
 
@@ -56,9 +54,17 @@ function draw(canvas: HTMLCanvasElement, frames: Frames, index: number, glowSour
   }
 }
 
-export default function BusyBarDisplay(): ReactNode {
+type Props = {
+  /** Path to the frame strip under static/. */
+  frames: string;
+  /** Shown on its own when the visitor prefers reduced motion, ideally with the countdown in view. */
+  stillFrame: number;
+  label: string;
+};
+
+export default function BusyBarDisplay({frames: framesPath, stillFrame, label}: Props): ReactNode {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const src = useBaseUrl('/img/busybar-on-call.png');
+  const src = useBaseUrl(framesPath);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -67,6 +73,8 @@ export default function BusyBarDisplay(): ReactNode {
     let frames: Frames | null = null;
     let index = 0;
     let timer: number | undefined;
+    // Switching strips reruns this effect; a strip that finishes loading after that must not start.
+    let cancelled = false;
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const glowSource = document.createElement('canvas');
     glowSource.width = COLUMNS;
@@ -78,6 +86,7 @@ export default function BusyBarDisplay(): ReactNode {
 
     const image = new Image();
     image.onload = () => {
+      if (cancelled) return;
       const reader = document.createElement('canvas');
       reader.width = image.width;
       reader.height = image.height;
@@ -85,7 +94,7 @@ export default function BusyBarDisplay(): ReactNode {
       if (!ctx) return;
       ctx.drawImage(image, 0, 0);
       frames = {count: image.height / ROWS, pixels: ctx.getImageData(0, 0, image.width, image.height).data};
-      index = reduceMotion ? STILL_FRAME : 0;
+      index = reduceMotion ? stillFrame : 0;
       render();
       if (!reduceMotion) {
         timer = window.setInterval(() => {
@@ -97,10 +106,11 @@ export default function BusyBarDisplay(): ReactNode {
     image.src = src;
 
     return () => {
+      cancelled = true;
       resize.disconnect();
       window.clearInterval(timer);
     };
-  }, [src]);
+  }, [src, stillFrame]);
 
   return (
     <figure className={styles.device}>
@@ -109,7 +119,7 @@ export default function BusyBarDisplay(): ReactNode {
           ref={canvasRef}
           className={styles.matrix}
           role="img"
-          aria-label="A BUSY Bar showing ON CALL, with the time left sliding in every few seconds"
+          aria-label={label}
         />
       </div>
     </figure>

@@ -1,4 +1,4 @@
-import type {ReactNode} from 'react';
+import {useState, type ReactNode} from 'react';
 import Link from '@docusaurus/Link';
 import Layout from '@theme/Layout';
 import BusyBarDisplay from '@site/src/components/BusyBarDisplay';
@@ -6,6 +6,71 @@ import StoreBadge, {STORE_URL} from '@site/src/components/StoreBadge';
 import styles from './index.module.css';
 
 const RELEASES_URL = 'https://github.com/homotechsual/oncall-busybar-agent/releases/latest';
+
+const previews = [
+  {
+    id: 'call',
+    name: 'On a call',
+    frames: '/img/busybar-on-call.png',
+    stillFrame: 17,
+    label: 'A BUSY Bar showing ON CALL, with the time left sliding in every few seconds',
+    caption:
+      'Captured from a real BUSY Bar during a scheduled meeting, with the time left sliding in every few seconds.',
+  },
+  {
+    id: 'no-meeting',
+    name: 'No meeting',
+    frames: '/img/busybar-no-meeting.png',
+    stillFrame: 0,
+    label: 'A BUSY Bar showing ON CALL with no countdown',
+    caption:
+      'For a call with nothing on your calendar, or when you haven’t signed in and the agent goes by your microphone, the bar shows ON CALL without a countdown.',
+  },
+  {
+    id: 'meeting-end',
+    name: 'Meeting ends',
+    frames: '/img/busybar-meeting-end.png',
+    stillFrame: 59,
+    label: 'A BUSY Bar counting down to zero, then showing Well done!',
+    caption:
+      'When a meeting’s time runs out, the bar says Well done! It goes back to its usual screen once the agent sees you’ve left the call. Shortened from a real capture.',
+  },
+  {
+    id: 'focus',
+    name: 'Focus time',
+    frames: '/img/busybar-flow.png',
+    stillFrame: 28,
+    label: 'A BUSY Bar showing FLOW, with the time left sliding in every few seconds',
+    caption:
+      'When Teams shows you as Focusing, the bar switches to FLOW and counts down to the end of your focus time. Also captured from a real BUSY Bar.',
+  },
+];
+
+function HeroDevice(): ReactNode {
+  const [selected, setSelected] = useState(previews[0].id);
+  const preview = previews.find(p => p.id === selected) ?? previews[0];
+
+  return (
+    <div className={styles.heroDevice}>
+      <div className={styles.previewSwitch} role="group" aria-label="Show the bar">
+        {previews.map(p => (
+          <button
+            key={p.id}
+            type="button"
+            className={styles.previewButton}
+            aria-pressed={p.id === selected}
+            onClick={() => setSelected(p.id)}>
+            {p.name}
+          </button>
+        ))}
+      </div>
+      <BusyBarDisplay frames={preview.frames} stillFrame={preview.stillFrame} label={preview.label} />
+      <p className={styles.caption} aria-live="polite">
+        {preview.caption}
+      </p>
+    </div>
+  );
+}
 
 const situations = [
   {
@@ -91,13 +156,7 @@ export default function Home(): ReactNode {
               Microsoft 365 work or school account to add Teams presence, meeting countdowns and FLOW status.
             </p>
           </div>
-          <div className={styles.heroDevice}>
-            <BusyBarDisplay />
-            <p className={styles.caption}>
-              Captured from a real BUSY Bar during a scheduled meeting, with the time left sliding in every few
-              seconds.
-            </p>
-          </div>
+          <HeroDevice />
         </header>
 
         <section className={styles.situations} aria-labelledby="situations-heading">
