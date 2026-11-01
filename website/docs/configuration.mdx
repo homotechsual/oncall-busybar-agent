@@ -26,7 +26,7 @@ Settings come from four places. Each one overrides the ones above it:
 | `Graph:ClientId` | (shared default) | The Entra app's client ID. It's public, not a secret. |
 | `Graph:TenantId` | `organizations` | Which tenants can sign in. Should match the app registration's account type. |
 | `Graph:PollIntervalSeconds` | `30` | How often to check presence and the calendar, in seconds. Both are checked together. |
-| `Mic:Enabled` | `true` | Whether to check the microphone at all. With it off, only Teams call presence counts, so calls Teams doesn't report won't start the timer. |
+| `Mic:Enabled` | `true` | Whether to check the microphone at all. With it off, only Teams call presence counts, so calls Teams doesn't report won't start the timer, and nothing works until you sign in. |
 | `Mic:PollIntervalSeconds` | `5` | How often to check the microphone, in seconds. |
 | `BusyBar:Address` | `10.0.4.20` | The BUSY Bar's address. The default is its USB connection. |
 | `BusyBar:HttpAccessPassword` | (empty) | The password for the BUSY Bar's HTTP API, if you connect over Wi-Fi and set one. Not needed over USB. |

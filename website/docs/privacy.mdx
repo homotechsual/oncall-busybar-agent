@@ -19,6 +19,9 @@ they never pass through anything we run.
 
 ## What data is accessed
 
+Signing in is optional. If you don't sign in, the app only reads your microphone activity and
+nothing goes to Microsoft Graph. If you do:
+
 - **Your Teams presence** from Microsoft Graph (`Presence.Read`, delegated). The app checks it
   every 30 seconds by default (`Graph:PollIntervalSeconds`) to tell when you're on a call.
 - **Your calendar** from Microsoft Graph (`Calendars.ReadBasic`, delegated). The app checks it at
@@ -26,19 +29,22 @@ they never pass through anything we run.
   It asks Graph for each event's end time and nothing else, so subjects, attendees, locations and
   bodies never reach your machine. `Calendars.ReadBasic` can't read event bodies or attachments
   anyway.
+
+Both Graph permissions are delegated. They work under your own sign-in, with only the access your
+organization already gives you.
+
+Whether or not you sign in:
+
 - **Microphone activity on your machine.** This is Windows' own record of which apps have
   recently used the microphone. The app never hears or records audio. It uses this to catch calls
   Teams presence misses, such as a call in another app. You can turn it off with `Mic:Enabled`;
   see [Configuration](/configuration).
 
-Both Graph permissions are delegated. They work under your own sign-in, with only the access your
-organization already gives you.
-
 ## Where it goes
 
 The app only talks to two things:
 
-- **Microsoft Graph**, through Microsoft's own sign-in library (MSAL). Your organization's
+- **Microsoft Graph**, only if you sign in, through Microsoft's own sign-in library (MSAL). Your organization's
   agreement with Microsoft covers that data, as it does for Teams itself.
 - **Your BUSY Bar**, over USB or your local network. The app sends it a timer value and one of
   the device's built-in status themes. No meeting details or presence information reach the

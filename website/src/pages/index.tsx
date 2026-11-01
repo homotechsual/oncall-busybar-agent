@@ -87,8 +87,8 @@ export default function Home(): ReactNode {
               </Link>
             </div>
             <p className={styles.requirements}>
-              Free and open source. Needs Windows 10 or later, a BUSY Bar, and a Microsoft 365 work or school
-              account.
+              Free and open source, for Windows 10 or later. It works with just your microphone; sign in with a
+              Microsoft 365 work or school account to add Teams presence, meeting countdowns and FLOW status.
             </p>
           </div>
           <div className={styles.heroDevice}>

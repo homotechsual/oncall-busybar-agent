@@ -6,7 +6,7 @@ the meeting's end time.
 
 Teams presence from Microsoft Graph is the main signal, with a calendar lookup for the meeting's
 end time. For calls Teams doesn't report, the app falls back to checking whether your microphone
-is in use.
+is in use. Signing in is optional: without it, the microphone check works on its own.
 
 ## Documentation
 
