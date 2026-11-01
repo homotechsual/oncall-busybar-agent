@@ -27,6 +27,8 @@
 
       <string id="BusyBar_Address">BUSY Bar device address</string>
       <string id="BusyBar_Address_Explain">The network address (hostname or IP) of the physical BUSY Bar device the agent controls. If not configured here, the value from the user's local appsettings.json (or the bundled default) is used instead.</string>
+      <string id="BusyBar_HttpAccessPassword">BUSY Bar HTTP API password</string>
+      <string id="BusyBar_HttpAccessPassword_Explain">The password set on the BUSY Bar's HTTP API, needed when the agent reaches the device over Wi-Fi and the API has a password. Leave this not configured for USB connections. The value is stored as plain text in this registry key, which every user on the machine can read, and the device's HTTP API sends it unencrypted over the local network. If not configured here, the value from the user's local appsettings.json is used instead.</string>
     </stringTable>
     <presentationTable>
       <presentation id="Graph_ClientId">
@@ -51,6 +53,11 @@
       <presentation id="BusyBar_Address">
         <textBox refId="BusyBar_Address_Text">
           <label>Device address:</label>
+        </textBox>
+      </presentation>
+      <presentation id="BusyBar_HttpAccessPassword">
+        <textBox refId="BusyBar_HttpAccessPassword_Text">
+          <label>Password:</label>
         </textBox>
       </presentation>
     </presentationTable>

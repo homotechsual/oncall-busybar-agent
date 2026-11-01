@@ -75,7 +75,11 @@ try
     builder.Services.AddSingleton(provider =>
     {
         var options = provider.GetRequiredService<IOptions<OncallAgent.BusyBarOptions>>().Value;
-        return new BusyBar(new Busy.Bar.BusyBarOptions { Addr = options.Address });
+        return new BusyBar(new Busy.Bar.BusyBarOptions
+        {
+            Addr = options.Address,
+            HttpAccessPassword = string.IsNullOrEmpty(options.HttpAccessPassword) ? null : options.HttpAccessPassword
+        });
     });
     builder.Services.AddSingleton<BusyBarTimerController>();
     builder.Services.AddSingleton<IPackagedAppContext, PackagedAppContext>();

@@ -125,5 +125,18 @@
       </elements>
     </policy>
 
+    <policy name="OncallBusyBarAgent_BusyBar_HttpAccessPassword"
+            class="Machine"
+            displayName="$(string.BusyBar_HttpAccessPassword)"
+            explainText="$(string.BusyBar_HttpAccessPassword_Explain)"
+            key="SOFTWARE\Policies\OncallBusyBarAgent\BusyBar"
+            presentation="$(presentation.BusyBar_HttpAccessPassword)">
+      <parentCategory ref="OncallBusyBarAgent_BusyBar" />
+      <supportedOn ref="SUPPORTED_OncallBusyBarAgent" />
+      <elements>
+        <text id="BusyBar_HttpAccessPassword_Text" valueName="HttpAccessPassword" required="true" />
+      </elements>
+    </policy>
+
   </policies>
 </policyDefinitions>

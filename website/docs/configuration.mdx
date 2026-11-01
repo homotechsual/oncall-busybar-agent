@@ -28,3 +28,15 @@ Settings load in four layers, each overriding the one before it:
 | `Mic:Enabled` | `true` | Whether the local microphone check runs at all. With it off, scheduled meetings are only detected from Teams call presence. |
 | `Mic:PollIntervalSeconds` | `5` | How often to check local microphone activity. |
 | `BusyBar:Address` | `10.0.4.20` | Network address of the BUSY Bar device. |
+| `BusyBar:HttpAccessPassword` | (empty) | The device's HTTP API password, if you connect over Wi-Fi and have set one. Not needed over USB. |
+
+### Connecting over Wi-Fi
+
+By default the agent talks to the BUSY Bar over USB, at `10.0.4.20`. To use Wi-Fi instead, enable
+the HTTP API on the device, set `BusyBar:Address` to the device's IP address or hostname, and, if
+you gave the HTTP API a password, put it in `BusyBar:HttpAccessPassword`. Without a password,
+anyone on the same network can control the device, so setting one is worth it.
+
+The password is stored as plain text in `appsettings.json` or the registry policy. The device's
+HTTP API is plain HTTP, so the password also crosses your local network unencrypted. It keeps out
+casual access, not someone who can watch your network traffic.

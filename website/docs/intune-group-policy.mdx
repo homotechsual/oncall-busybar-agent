@@ -10,7 +10,7 @@ registry values under `HKLM\SOFTWARE\Policies\OncallBusyBarAgent`, one subkey pe
 ```txt
 HKLM\SOFTWARE\Policies\OncallBusyBarAgent\Graph      (values: ClientId, TenantId, PollIntervalSeconds)
 HKLM\SOFTWARE\Policies\OncallBusyBarAgent\Mic         (values: Enabled, PollIntervalSeconds)
-HKLM\SOFTWARE\Policies\OncallBusyBarAgent\BusyBar     (values: Address)
+HKLM\SOFTWARE\Policies\OncallBusyBarAgent\BusyBar     (values: Address, HttpAccessPassword)
 ```
 
 Set only the values you want to lock down. Anything unset falls through to the user's own
@@ -56,9 +56,10 @@ call agent**.
 
 ### What this does not cover
 
-This template only exposes the six settings already documented in
+This template only exposes the seven settings already documented in
 [Configuration](/configuration)'s registry table (`Graph:ClientId`, `Graph:TenantId`,
-`Graph:PollIntervalSeconds`, `Mic:Enabled`, `Mic:PollIntervalSeconds`, `BusyBar:Address`). If a
+`Graph:PollIntervalSeconds`, `Mic:Enabled`, `Mic:PollIntervalSeconds`, `BusyBar:Address`,
+`BusyBar:HttpAccessPassword`). If a
 future version of the app adds new config keys, this template needs a matching update to expose
 them the same way. The app itself will still read a manually-set registry value under the same
 `HKLM\SOFTWARE\Policies\OncallBusyBarAgent` key even if this template hasn't been updated to add a
