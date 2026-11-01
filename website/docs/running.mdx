@@ -8,28 +8,27 @@ Grab an installer from the
 [latest release](https://github.com/homotechsual/oncall-busybar-agent/releases/latest). There are
 two options:
 
-- **MSI**, one per CPU architecture. Most people want **x64**; **ARM64** is for Windows on ARM
-  and **x86** for 32-bit only machines. It installs for all users, so expect an elevation prompt.
-  For Intune (Win32 app) or SCCM, install silently with `msiexec /i <file>.msi /quiet`.
-- **MSIX bundle** (`.msixbundle`), one file for all three architectures. Double click it to install
-  with App Installer, or deploy it as a line-of-business app in Intune.
+- **MSI**, one per processor type. Most people want **x64**. **ARM64** is for Windows on Arm, and
+  **x86** for 32-bit Windows. It installs for everyone on the machine, so expect an admin prompt.
+  For Intune (as a Win32 app) or Configuration Manager, install it silently with
+  `msiexec /i <file>.msi /quiet`.
+- **MSIX bundle** (`.msixbundle`), one file for all three. Double-click it to install, or deploy
+  it as a line-of-business app in Intune.
 
 Use one or the other. They don't replace each other, so installing both gives you two copies.
 
-Launch the app from its Start Menu shortcut. A tray icon appears, with no console window. Right
-click it to sign in the first time; after that, your token is cached and refreshed silently.
-Settings go in your per-user `appsettings.json`, not the install folder; **Open settings file**
-in the tray menu opens it (see [Configuration](/configuration)).
+Start the app from the Start menu. It runs as an icon in the notification area, with no window.
+Right-click the icon to sign in the first time. After that, it stays signed in. Your settings go
+in your own `appsettings.json`, not the install folder, and **Open settings file** in the menu
+opens it. See [Configuration](/configuration).
 
-Right click the tray icon and check **Start with Windows** to launch it automatically at login.
-For the MSI, this adds a shortcut to the exe in your Startup folder rather than a registry Run key
-deliberately: Run keys are the autorun technique most heavily scrutinized by security/EDR tooling,
-and a shortcut achieves the same result without tripping it. For the MSIX, it uses the package's
-own startup task. Unchecking it undoes either.
+To have it start when you sign in to Windows, right-click the icon and check **Start with
+Windows**. For the MSI, this puts a shortcut in your Startup folder. That's deliberate: security
+tools watch registry Run keys closely, and a shortcut does the same job without setting them off. For the
+MSIX, it uses the package's own startup task. Unchecking it undoes either.
 
 ## Code signing
 
-Release installers and the app inside them are signed with Azure Artifact Signing, so SmartScreen
-shouldn't complain. (Maintainers: the setup is in
-[`OncallAgent.Msi/README.md`](https://github.com/homotechsual/oncall-busybar-agent/tree/main/OncallAgent.Msi).)
-The Microsoft Store version is signed by the Store.
+The installers and the app inside them are signed with Azure Artifact Signing, so SmartScreen
+shouldn't warn you. The signing setup for maintainers is in
+[`OncallAgent.Msi/README.md`](https://github.com/homotechsual/oncall-busybar-agent/tree/main/OncallAgent.Msi).

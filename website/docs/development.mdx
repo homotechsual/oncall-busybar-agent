@@ -10,31 +10,38 @@ dotnet test OncallAgent.sln
 dotnet run --project src/OncallAgent/OncallAgent.csproj
 ```
 
-Or run the debug build's exe directly (also console-free, unlike `dotnet run`):
+`dotnet run` keeps a console window open for as long as the app runs, which is handy for logs but
+not for everyday use. To run without one, start the exe directly:
 
 ```bash
 src\OncallAgent\bin\Debug\net10.0-windows\OncallAgent.exe
 ```
 
-Don't use `dotnet run` for normal/production use: it always launches through the `dotnet` CLI's
-own console host, so a console window stays open and attached for as long as the app runs,
-whatever the target's own output type is. `dotnet run` is fine for development iteration, where
-having that console around for log output is actually useful.
+`dotnet build` on the solution fails on the packaging project (`OncallAgent.Package`), which needs
+Visual Studio's MSBuild. Build it from Visual Studio, or build and test the app and test projects
+on their own.
 
 ## Building the installers locally
 
-To build an MSI the same way the release does (unsigned, since signing only happens in CI):
+To build an MSI the same way the release does, minus the signing:
 
 ```powershell
 dotnet publish src\OncallAgent\OncallAgent.csproj -c Release -r win-x64 --self-contained -p:Version=1.0.0 -o publish\win-x64
 dotnet build OncallAgent.Msi\OncallAgent.Msi.wixproj -c Release -p:Platform=x64 -p:Version=1.0.0 -p:PublishDir=$((Resolve-Path publish\win-x64).Path)
 ```
 
-The MSI ends up in `OncallAgent.Msi\bin\x64\Release\`. Use `win-x86`/`x86` or
-`win-arm64`/`arm64` for the other architectures.
+The MSI ends up in `OncallAgent.Msi\bin\x64\Release\`. For the other architectures, use
+`win-x86` and `x86`, or `win-arm64` and `arm64`.
 
-> If `dotnet publish` fails with `MSB3094: "DestinationFiles" refers to 1 item(s), and
-> "SourceFiles" refers to N item(s)`, the repo (or the `-o` output path) is sitting under a Windows
-> user profile folder whose name contains an apostrophe (`C:\Users\O'Brien\...`). The .NET SDK's
-> publish targets mis-batch file copies when an apostrophe appears anywhere in the path. Publish
-> from (or to) a path without one, e.g. `-o C:\publish\oncall-busybar-agent`.
+> **Apostrophes in the path:** if `dotnet publish` fails with `MSB3094: "DestinationFiles" refers
+> to 1 item(s), and "SourceFiles" refers to N item(s)`, check whether the repo or the `-o` folder
+> is under a user profile with an apostrophe in its name, like `C:\Users\O'Brien\`. The .NET SDK
+> mishandles file copies when there's an apostrophe anywhere in the path. Publish from and to a
+> path without one, for example `-o C:\publish\oncall-busybar-agent`.
+
+## AI use
+
+AI tools assist with developing this project: Claude Code for things like design and UI work,
+build and release tooling, documentation and parts of the app's code, and GitHub Copilot for
+autocompletion in the editor. The maintainer decides what gets built, reviews and tests every
+change, and is responsible for everything that ships.

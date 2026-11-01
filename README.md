@@ -1,16 +1,16 @@
 # oncall-busybar-agent
 
-A Windows tray app that keeps a physical BUSY Bar's built-in timer in sync with real Microsoft
-Teams on call status: started (sized to your current meeting's remaining time when known) the
-moment you are on a call, stopped the moment you are not.
+A Windows tray app that runs your BUSY Bar's timer while you're on a Microsoft Teams call. The
+timer starts when a call starts and stops when it ends. For a scheduled meeting, it counts down to
+the meeting's end time.
 
-Reads Microsoft Graph presence as its primary signal (with a calendar lookup for the timer's
-length), and falls back to local microphone activity for calls Graph presence misses.
+Teams presence from Microsoft Graph is the main signal, with a calendar lookup for the meeting's
+end time. For calls Teams doesn't report, the app falls back to checking whether your microphone
+is in use.
 
 ## Documentation
 
-Full docs, including sign-in, configuration, Intune/Group Policy management, running in
-production, and the privacy policy, live at
+Everything else (signing in, configuration, Intune and Group Policy, installing, privacy) is at
 **[oncall.busy.homotechsual.dev](https://oncall.busy.homotechsual.dev)**.
 
 ## Development
@@ -21,13 +21,19 @@ dotnet test OncallAgent.sln
 dotnet run --project src/OncallAgent/OncallAgent.csproj
 ```
 
-Or run the debug build's exe directly (also console-free, unlike `dotnet run`):
+`dotnet run` keeps a console window open for as long as the app runs, which is handy for logs but
+not for everyday use. To run without one, start the exe directly:
 
 ```bash
 src\OncallAgent\bin\Debug\net10.0-windows\OncallAgent.exe
 ```
 
-Don't use `dotnet run` for normal/production use: it always launches through the `dotnet` CLI's
-own console host, so a console window stays open and attached for as long as the app runs,
-whatever the target's own output type is. `dotnet run` is fine for development iteration, where
-having that console around for log output is actually useful.
+Building the installers is covered on the
+[Development](https://oncall.busy.homotechsual.dev/development) docs page.
+
+## AI use
+
+AI tools assist with developing this project: Claude Code for things like design and UI work,
+build and release tooling, documentation and parts of the app's code, and GitHub Copilot for
+autocompletion in the editor. The maintainer decides what gets built, reviews and tests every
+change, and is responsible for everything that ships.

@@ -5,60 +5,55 @@ slug: /
 
 # Getting started
 
-**BUSY Bar on call agent** is a Windows tray app that keeps a physical BUSY Bar's built-in timer
-in sync with real Microsoft Teams on call status: started (sized to your current meeting's
-remaining time when known) the moment you are on a call, stopped the moment you are not.
+**BUSY Bar on call agent** is a Windows tray app that runs your BUSY Bar's timer while you're on a
+Microsoft Teams call. The timer starts when a call starts and stops when it ends. For a scheduled
+meeting, it counts down to the meeting's end time.
 
-It reads Microsoft Graph presence as its primary signal (with a calendar lookup for the timer's
-length), and falls back to local microphone activity for calls Graph presence misses. A meeting
-that's only on your calendar doesn't count unless your microphone is in use, so leaving a call
-early stops the timer.
+Teams presence from Microsoft Graph is the main signal, with a calendar lookup for the meeting's
+end time. For calls Teams doesn't report, the app falls back to checking whether your microphone
+is in use. A meeting on your calendar only counts while your microphone is in use, so the timer
+stops if you leave early.
 
 ## Sign in
 
-No setup required to get started: this app ships with a default, shared multi-tenant Entra app
-registration (the `Graph:ClientId` already in `appsettings.json`). The first time you sign in, if
-your organization requires admin consent for third-party apps, ask your Entra admin to grant
-consent for the delegated `Presence.Read` and `Calendars.ReadBasic` permissions this app requests.
-After that, anyone in your tenant can sign in with no registration step of their own.
+There's nothing to set up before you sign in. The app ships with a shared, multi-tenant Entra app
+registration (the `Graph:ClientId` in `appsettings.json`). If your organization requires admin
+consent for third-party apps, ask an Entra admin to grant consent for the delegated
+`Presence.Read` and `Calendars.ReadBasic` permissions. After that, anyone in your tenant can sign
+in.
 
 ## Optional: register your own Entra app
 
-Only do this if the default shared app above doesn't work for you: typically because your
-tenant's Conditional Access policy blocks third-party multi-tenant app consent outright, or you'd
-rather run this under an app registration you fully control. Register one in
-[the Entra admin center](https://entra.microsoft.com/):
+You only need this if the shared registration doesn't work for you. That's usually because
+Conditional Access blocks consent to multi-tenant apps, or because you'd rather use a registration
+you control. Create one in [the Entra admin center](https://entra.microsoft.com/):
 
-1. **App registrations** then **New registration**.
-2. Name it whatever you like (for example `oncall-busybar-agent`).
-3. Under **Supported account types**, choose **Accounts in any organizational directory**
-   (multi tenant) if you want anyone to be able to sign in without registering their own app, or
-   **Accounts in this organizational directory only** if you want it restricted to your tenant.
-4. Under **Redirect URI**, choose platform **Mobile and desktop applications** and add
+1. Go to **App registrations** and choose **New registration**.
+2. Give it a name, for example `oncall-busybar-agent`.
+3. Under **Supported account types**, choose **Accounts in any organizational directory** if you
+   want people in other tenants to be able to use it, or **Accounts in this organizational
+   directory only** to keep it to your own tenant.
+4. Under **Redirect URI**, choose the **Mobile and desktop applications** platform and add
    `http://localhost`.
-5. This app signs in via the Windows broker (WAM), which requires its own redirect URI. Add a
-   second entry under that same **Mobile and desktop applications** platform:
-   `ms-appx-web://Microsoft.AAD.BrokerPlugin/<client-id>`, substituting the app's own client ID
-   (from step 6 below) for `<client-id>`. Skipping this produces
-   `AADSTS50011: The redirect URI ... does not match the redirect URIs configured for the
-   application` the moment you try to sign in.
-6. Under **API permissions**, add Microsoft Graph delegated permissions `Presence.Read` and
+5. Add a second redirect URI on the same platform for the Windows sign-in broker:
+   `ms-appx-web://Microsoft.AAD.BrokerPlugin/<client-id>`. You'll fill in the client ID in step 7.
+   Without this, sign-in fails with `AADSTS50011: The redirect URI ... does not match the redirect
+   URIs configured for the application`.
+6. Under **API permissions**, add the Microsoft Graph delegated permissions `Presence.Read` and
    `Calendars.ReadBasic`.
-7. Copy the **Application (client) ID** from the Overview page, and go back to add it into the
-   redirect URI from step 5.
-8. Point this app at your new registration by setting `Graph:ClientId` (and `Graph:TenantId` if
-   you restricted account types in step 3) via any of the layers in [Configuration](/configuration):
-   the per-user `appsettings.json` file is the simplest for a single machine; the registry
-   policy layer is the way to roll this out to a whole organization via
-   [Intune or Group Policy](/intune-group-policy).
+7. Copy the **Application (client) ID** from the Overview page and put it into the redirect URI
+   from step 5.
+8. Set `Graph:ClientId` to your new client ID, and `Graph:TenantId` too if you limited the account
+   types in step 3. Your own `appsettings.json` is simplest for one machine. To roll it out to a
+   whole organization, use [Intune or Group Policy](/intune-group-policy). See
+   [Configuration](/configuration) for all the options.
 
 ## Next
 
-- [Configuration](/configuration): every setting, the four layers they can come from, and what
-  each defaults to.
-- [Intune / Group Policy](/intune-group-policy): centrally managing settings for a whole
-  organization.
-- [Running in production](/running): installing a signed release (MSI or MSIX), startup, and code signing.
-- [Privacy](/privacy): what data this app accesses and where it goes.
+- [Configuration](/configuration): every setting, where settings can come from, and the defaults.
+- [Intune / Group Policy](/intune-group-policy): managing settings for a whole organization.
+- [Running in production](/running): installing a release, starting with Windows, and code
+  signing.
+- [Privacy](/privacy): what data the app reads and where it goes.
 - [Terms of service](/terms): the terms for using the app and the shared app registration.
-- [Development](/development): building and testing this repo.
+- [Development](/development): building and testing the code.

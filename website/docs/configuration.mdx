@@ -4,39 +4,40 @@ sidebar_position: 3
 
 # Configuration
 
-Settings load in four layers, each overriding the one before it:
+Settings come from four places. Each one overrides the ones above it:
 
-1. The bundled `src/OncallAgent/appsettings.json`: factory defaults, including the shared
-   `Graph:ClientId` described in [Sign in](/#sign-in).
-2. Environment variables (double underscore nesting, for example `Graph__ClientId`).
-3. A per-user, writable copy at `%LOCALAPPDATA%\oncall-busybar-agent\appsettings.json`, created
-   automatically from the bundled defaults the first time the app runs. Edit this file (not the
-   one under `src/OncallAgent`) to change settings after that first run; it survives updates,
-   which the bundled file's location does not once the app is installed as an MSIX package.
-   The MSIX version keeps this file inside its package data instead, at
+1. **The bundled defaults**, in the `appsettings.json` installed alongside the app
+   (`src/OncallAgent/appsettings.json` in the repo). This includes the shared `Graph:ClientId`
+   described in [Sign in](/#sign-in).
+2. **Your own settings file**, at `%LOCALAPPDATA%\oncall-busybar-agent\appsettings.json`. The app
+   creates it from the bundled defaults the first time it runs, and this is the file to edit. It
+   survives updates; the bundled one doesn't. The Store and MSIX versions keep it in their package
+   data instead, at
    `%LOCALAPPDATA%\Packages\MJCOLtd.OnCallBusyBarAgent_<id>\LocalCache\Local\oncall-busybar-agent\`,
-   and Windows removes it on uninstall. Either way, **Open settings file** in the tray icon's
-   menu opens the right one. Restart the agent after saving.
-4. An IT-managed registry policy, for organizations deploying this via Intune or another MDM tool.
-   See [Intune / Group Policy](/intune-group-policy). This always wins over the file above.
+   and Windows removes it when you uninstall. **Open settings file** in the tray menu opens
+   whichever one you have. Restart the agent after saving.
+3. **Environment variables and command-line arguments**, using a double underscore for nesting in
+   environment variables (for example `Graph__ClientId`).
+4. **Registry policy**, set by IT through Intune or Group Policy. See
+   [Intune / Group Policy](/intune-group-policy). This always wins.
 
 | Key | Default | Description |
 | --- | --- | --- |
-| `Graph:ClientId` | (shared default) | The Entra app's (public) client ID. |
-| `Graph:TenantId` | `organizations` | Which tenants can sign in; matches the app registration's account type. |
-| `Graph:PollIntervalSeconds` | `30` | How often to poll presence and the calendar (both are polled together on every cycle). |
-| `Mic:Enabled` | `true` | Whether the local microphone check runs at all. With it off, scheduled meetings are only detected from Teams call presence. |
-| `Mic:PollIntervalSeconds` | `5` | How often to check local microphone activity. |
-| `BusyBar:Address` | `10.0.4.20` | Network address of the BUSY Bar device. |
-| `BusyBar:HttpAccessPassword` | (empty) | The device's HTTP API password, if you connect over Wi-Fi and have set one. Not needed over USB. |
+| `Graph:ClientId` | (shared default) | The Entra app's client ID. It's public, not a secret. |
+| `Graph:TenantId` | `organizations` | Which tenants can sign in. Should match the app registration's account type. |
+| `Graph:PollIntervalSeconds` | `30` | How often to check presence and the calendar, in seconds. Both are checked together. |
+| `Mic:Enabled` | `true` | Whether to check the microphone at all. With it off, only Teams call presence counts, so calls Teams doesn't report won't start the timer. |
+| `Mic:PollIntervalSeconds` | `5` | How often to check the microphone, in seconds. |
+| `BusyBar:Address` | `10.0.4.20` | The BUSY Bar's address. The default is its USB connection. |
+| `BusyBar:HttpAccessPassword` | (empty) | The password for the BUSY Bar's HTTP API, if you connect over Wi-Fi and set one. Not needed over USB. |
 
-### Connecting over Wi-Fi
+## Connecting over Wi-Fi
 
-By default the agent talks to the BUSY Bar over USB, at `10.0.4.20`. To use Wi-Fi instead, enable
-the HTTP API on the device, set `BusyBar:Address` to the device's IP address or hostname, and, if
-you gave the HTTP API a password, put it in `BusyBar:HttpAccessPassword`. Without a password,
-anyone on the same network can control the device, so setting one is worth it.
+The agent talks to the BUSY Bar over USB by default, at `10.0.4.20`. To use Wi-Fi, turn on the
+HTTP API on the device and set `BusyBar:Address` to its IP address or hostname. If you gave the
+HTTP API a password, put it in `BusyBar:HttpAccessPassword`. It's worth setting one: without it,
+anyone on the same network can control the device.
 
-The password is stored as plain text in `appsettings.json` or the registry policy. The device's
-HTTP API is plain HTTP, so the password also crosses your local network unencrypted. It keeps out
-casual access, not someone who can watch your network traffic.
+The password is stored as plain text, in `appsettings.json` or the registry. The device's HTTP API
+doesn't use encryption either, so the password crosses your network in the clear. It keeps out
+casual access, but not someone who can watch your network traffic.

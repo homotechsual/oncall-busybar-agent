@@ -4,8 +4,8 @@ sidebar_position: 4
 
 # Intune / Group Policy
 
-Any of the settings in [Configuration](/configuration) can be locked down centrally by setting
-registry values under `HKLM\SOFTWARE\Policies\OncallBusyBarAgent`, one subkey per section:
+You can lock down any of the settings in [Configuration](/configuration) by setting registry
+values under `HKLM\SOFTWARE\Policies\OncallBusyBarAgent`, with one subkey per section:
 
 ```txt
 HKLM\SOFTWARE\Policies\OncallBusyBarAgent\Graph      (values: ClientId, TenantId, PollIntervalSeconds)
@@ -13,54 +13,49 @@ HKLM\SOFTWARE\Policies\OncallBusyBarAgent\Mic         (values: Enabled, PollInte
 HKLM\SOFTWARE\Policies\OncallBusyBarAgent\BusyBar     (values: Address, HttpAccessPassword)
 ```
 
-Set only the values you want to lock down. Anything unset falls through to the user's own
-`appsettings.json`. `Enabled` should be set as a String value (`true` or `false`); the interval
-and address values can be a String or a DWORD, whichever your deployment tool makes easier. How
-the registry values get set is up to you: an Intune Settings Catalog custom OMA-URI profile, a
-Win32 app deployment script, or plain Group Policy all work identically from this app's point of
-view: it only reads the registry, it doesn't care how the values arrived.
+Only set the values you want to enforce. Anything you leave out comes from the user's own
+`appsettings.json`. Set `Enabled` as a string (`true` or `false`). The intervals can be a string
+or a DWORD, whichever your deployment tool makes easier.
+
+It doesn't matter how the values get there. An Intune custom OMA-URI profile, a script in a Win32
+app deployment and Group Policy all work the same, because the app just reads the registry.
 
 ## Administrative template (ADMX/ADML)
 
-For a friendlier, point-and-click way to set these than raw OMA-URI or a script, the repo ships
-an administrative template at
+If you'd rather point and click than write OMA-URIs or scripts, the repo includes an
+administrative template in
 [`admx/`](https://github.com/homotechsual/oncall-busybar-agent/tree/main/admx):
-`OncallBusyBarAgent.admx` plus its language resource, `en-US/OncallBusyBarAgent.adml`. It gives IT
-a UI in Intune's Settings Catalog or the local/domain Group Policy Editor for the exact same
-registry values described above; it doesn't add any new capability the app doesn't already have.
+`OncallBusyBarAgent.admx` and its language file, `en-US/OncallBusyBarAgent.adml`. It gives you
+the same registry values as friendly settings in Intune's Settings Catalog or the Group Policy
+Editor.
 
 ### Import into Intune
 
-1. **Devices** → **Manage devices** → **Configuration** → **Import ADMX** tab → **Import**.
-2. Upload `OncallBusyBarAgent.admx` as the ADMX file, and `en-US/OncallBusyBarAgent.adml` as the
-   ADML file for the `en-US` language.
-3. Once imported, create a **Settings Catalog** configuration profile and search for
-   "BUSY Bar on call agent" to find the six settings, organized under **Microsoft Graph sign-in**,
-   **Microphone fallback**, and **BUSY Bar device** categories.
-4. Set only the settings you want to lock down and assign the profile to your target devices.
-   Anything left "Not configured" falls through to the user's own `appsettings.json`, exactly as
-   described above.
+1. Go to **Devices** → **Manage devices** → **Configuration**, open the **Import ADMX** tab and
+   choose **Import**.
+2. Upload `OncallBusyBarAgent.admx` as the ADMX file and `en-US/OncallBusyBarAgent.adml` as the
+   ADML file for `en-US`.
+3. Create a **Settings Catalog** profile and search for "BUSY Bar on call agent". The seven
+   settings are grouped under **Microsoft Graph sign-in**, **Microphone fallback** and **BUSY Bar
+   device**.
+4. Set the ones you want to enforce and assign the profile to your devices. Anything left as "Not
+   configured" comes from the user's own `appsettings.json`.
 
-**Updating this file later:** re-uploading a changed ADMX with the same settings fails with a
-namespace error unless you first delete any configuration profiles using it and delete the old
-ADMX, or give the new version's `policyNamespaces` a different namespace (e.g. append a version
-number). Plan for this before making a breaking change to the policy definitions.
+**Updating the template later:** Intune won't accept a changed ADMX with the same namespace while
+the old one is still in use. Either delete the profiles that use it and the old ADMX first, or
+give the new version a different `policyNamespaces` namespace, for example by adding a version
+number.
 
 ### Use with Group Policy instead
 
 Copy `OncallBusyBarAgent.admx` to `%SystemRoot%\PolicyDefinitions` and
-`en-US\OncallBusyBarAgent.adml` to `%SystemRoot%\PolicyDefinitions\en-US` (or your domain's
-central policy store, if you have one) on a machine with the Group Policy Management Console. The
-settings then appear under **Computer Configuration → Administrative Templates → BUSY Bar on
-call agent**.
+`en-US\OncallBusyBarAgent.adml` to `%SystemRoot%\PolicyDefinitions\en-US`, or to your domain's
+central store if you have one. The settings then appear under **Computer Configuration →
+Administrative Templates → BUSY Bar on call agent**.
 
-### What this does not cover
+### What the template covers
 
-This template only exposes the seven settings already documented in
-[Configuration](/configuration)'s registry table (`Graph:ClientId`, `Graph:TenantId`,
-`Graph:PollIntervalSeconds`, `Mic:Enabled`, `Mic:PollIntervalSeconds`, `BusyBar:Address`,
-`BusyBar:HttpAccessPassword`). If a
-future version of the app adds new config keys, this template needs a matching update to expose
-them the same way. The app itself will still read a manually-set registry value under the same
-`HKLM\SOFTWARE\Policies\OncallBusyBarAgent` key even if this template hasn't been updated to add a
-friendly control for it yet.
+The template has the seven settings from [Configuration](/configuration): `Graph:ClientId`,
+`Graph:TenantId`, `Graph:PollIntervalSeconds`, `Mic:Enabled`, `Mic:PollIntervalSeconds`,
+`BusyBar:Address` and `BusyBar:HttpAccessPassword`. If a later version adds a setting before the
+template catches up, you can still set it directly in the registry under the same key.

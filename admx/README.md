@@ -1,8 +1,8 @@
 # Administrative template for oncall-busybar-agent
 
-`OncallBusyBarAgent.admx` (+ its language resource, `en-US/OncallBusyBarAgent.adml`) gives IT a
-point-and-click UI (in Intune's Settings Catalog or the local/domain Group Policy Editor) for
-the same registry policy the app already reads from `HKLM\SOFTWARE\Policies\OncallBusyBarAgent`.
+`OncallBusyBarAgent.admx` and its language file, `en-US/OncallBusyBarAgent.adml`, let IT manage
+the app's settings in Intune's Settings Catalog or the Group Policy Editor. They write the same
+registry values the app reads from `HKLM\SOFTWARE\Policies\OncallBusyBarAgent`.
 
-See [Intune / Group Policy](https://oncall.busy.homotechsual.dev/intune-group-policy) for import
-steps, Group Policy setup, and what this template does and doesn't cover.
+Import steps and the list of settings are on the
+[Intune / Group Policy](https://oncall.busy.homotechsual.dev/intune-group-policy) docs page.

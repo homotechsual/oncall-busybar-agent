@@ -4,78 +4,77 @@ sidebar_position: 2
 
 # Privacy policy
 
-*Last updated: 2026-08-12*
+*Last updated: 2026-11-01*
 
 **BUSY Bar on call agent** is a Windows tray app, published by homotechsual (MJCO), that runs on
-your own machine. This page describes what data it accesses, where it goes, and what's stored.
+your own machine. This page covers what data it reads, where that data goes and what it stores.
 For what the app does, see [Getting started](/).
 
 ## Who we are
 
-This app is published by **homotechsual** (MJCO). It ships with a default, shared multi-tenant
-Entra app registration so most users don't need to register their own. That shared registration
-grants the publisher no access to your data: Microsoft issues sign-in tokens directly to the app
-running on your own device, and those tokens never pass through anything the publisher operates.
+This app is published by **homotechsual** (MJCO). It comes with a shared, multi-tenant Entra app
+registration so most people don't need to register their own. That registration doesn't give us
+any access to your data. Microsoft issues sign-in tokens straight to the app on your device, and
+they never pass through anything we run.
 
 ## What data is accessed
 
-- **Microsoft Graph presence** (`Presence.Read`, delegated): read on every poll (every
-  `Graph:PollIntervalSeconds`, 30 seconds by default) to detect when you're on a call.
-- **Microsoft Graph calendar** (`Calendars.ReadBasic`, delegated): read on that same poll, not
-  only while you're on a call, to size the BUSY Bar timer to your current meeting's remaining
-  time. The app asks Graph for each event's end time and nothing else, so subjects, attendees,
-  locations and bodies never reach your machine. `Calendars.ReadBasic` can't read event bodies
-  or attachments at all.
-- **Local microphone activity**: specifically, Windows' own record of which applications have
-  recently used the microphone (not audio content, and not a recording), used only as a fallback
-  signal for calls Graph presence misses (for example, a Teams call started outside a scheduled
-  meeting). This can be turned off entirely; see `Mic:Enabled` in [Configuration](/configuration).
+- **Your Teams presence** from Microsoft Graph (`Presence.Read`, delegated). The app checks it
+  every 30 seconds by default (`Graph:PollIntervalSeconds`) to tell when you're on a call.
+- **Your calendar** from Microsoft Graph (`Calendars.ReadBasic`, delegated). The app checks it at
+  the same time, whether or not you're on a call, to set the timer to your current meeting's end.
+  It asks Graph for each event's end time and nothing else, so subjects, attendees, locations and
+  bodies never reach your machine. `Calendars.ReadBasic` can't read event bodies or attachments
+  anyway.
+- **Microphone activity on your machine.** This is Windows' own record of which apps have
+  recently used the microphone. The app never hears or records audio. It uses this to catch calls
+  Teams presence misses, such as a call in another app. You can turn it off with `Mic:Enabled`;
+  see [Configuration](/configuration).
 
-Both Graph permissions are delegated: they run under your own sign-in, with only the access your
-organization's Entra tenant already grants you, not any elevated access of their own.
+Both Graph permissions are delegated. They work under your own sign-in, with only the access your
+organization already gives you.
 
 ## Where it goes
 
-Nowhere beyond the two systems this app is designed to talk to:
+The app only talks to two things:
 
-- **Microsoft Graph**, via Microsoft's own sign-in (MSAL) and API: subject to your own tenant's
-  existing data-handling terms, not any separate ones from this app.
-- **The BUSY Bar device**, over your local network: this app sends it only a remaining-time
-  value and one of the device's own built-in status themes; no meeting titles, attendees, or any
-  other calendar or presence detail ever reaches the device.
+- **Microsoft Graph**, through Microsoft's own sign-in library (MSAL). Your organization's
+  agreement with Microsoft covers that data, as it does for Teams itself.
+- **Your BUSY Bar**, over USB or your local network. The app sends it a timer value and one of
+  the device's built-in status themes. No meeting details or presence information reach the
+  device.
 
-This app has no telemetry, analytics, or crash reporting of any kind. Nothing about your
-presence, calendar, or microphone activity is sent anywhere except the two destinations above.
+There's no telemetry, analytics or crash reporting. Nothing about your presence, calendar or
+microphone use goes anywhere else.
 
 ## What's stored locally
 
-- The MSAL authentication token cache, at `%LOCALAPPDATA%\oncall-busybar-agent\msal_cache.bin`
-  (managed by Microsoft's own authentication library, not this app's own code), so your sign-in
-  persists between runs without you having to sign in every time.
-- Your per-user `appsettings.json`, under `%LOCALAPPDATA%\oncall-busybar-agent\`.
+- **The sign-in token cache**, at `%LOCALAPPDATA%\oncall-busybar-agent\msal_cache.bin`, so you
+  stay signed in between runs. Microsoft's sign-in library manages it, and Windows encrypts it for
+  your user account.
+- **Your settings file**, `appsettings.json`, in the same folder.
 
-Both are local to your own Windows user account and are never transmitted anywhere by this app.
-The MSIX version keeps them under its package data
+Both belong to your Windows user account and the app never sends them anywhere. The Store and
+MSIX versions keep them in their package data
 (`%LOCALAPPDATA%\Packages\MJCOLtd.OnCallBusyBarAgent_<id>\LocalCache\Local\oncall-busybar-agent\`)
 instead, and Windows deletes them when you uninstall it.
 
 ## Your choices
 
-- **Sign out** any time from the tray icon's right-click menu: this stops all Graph access
-  immediately.
-- **Delete the token cache** at `%LOCALAPPDATA%\oncall-busybar-agent\msal_cache.bin` to remove
-  your cached sign-in from this device entirely.
-- **Revoke this app's access** at any time from
-  [My Apps](https://myapplications.microsoft.com/), independent of anything on this device.
-- **Turn off the microphone fallback** entirely by setting `Mic:Enabled` to `false`; see
+- **Sign out** from the tray icon's menu at any time. The app stops reading from Graph straight
+  away.
+- **Delete the token cache** (`msal_cache.bin`, above) to remove your sign-in from the device.
+- **Revoke the app's access** at [My Apps](https://myapplications.microsoft.com/). This works even
+  if you no longer have the device.
+- **Turn off the microphone check** by setting `Mic:Enabled` to `false`. See
   [Configuration](/configuration).
 
 ## IT-managed deployments
 
-Organizations that deploy this app via Intune or Group Policy can centrally *set* (not read back)
-configuration values through the registry policy layer described in
-[Intune / Group Policy](/intune-group-policy). This changes where configuration values come from;
-it doesn't change what data the app itself accesses or where that data goes.
+If your organization deploys the app with Intune or Group Policy, IT can set its settings
+centrally (see [Intune / Group Policy](/intune-group-policy)). They can set values, but they can't
+read anything back through the app, and it doesn't change what data the app reads or where it
+goes.
 
 ## Questions
 
