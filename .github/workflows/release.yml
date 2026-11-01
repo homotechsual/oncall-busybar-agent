@@ -342,8 +342,8 @@ jobs:
           name: store-msixupload-${{ env.VERSION }}
           path: store
 
-      # Pinned: the CLI's options have changed between releases (v0.4.3 takes --inputDirectory,
-      # where Microsoft's docs already describe --inputFile).
+      # Pinned: the CLI's options have changed between releases (Microsoft's docs already describe
+      # an --inputFile option that v0.4.3 doesn't have).
       - name: Setup Microsoft Store Developer CLI
         uses: microsoft/microsoft-store-apppublisher@v1.4
         with:
@@ -360,7 +360,9 @@ jobs:
         shell: pwsh
         run: |
           $package = Get-ChildItem store -Filter *.msixupload | Select-Object -First 1
-          msstore publish $package.DirectoryName --inputDirectory $package.DirectoryName --appId $env:PRODUCT_ID --noCommit
+          # Passing the package file itself is what selects the CLI's MSIX publisher; a folder
+          # makes it look for a project to build instead.
+          msstore publish $package.FullName --appId $env:PRODUCT_ID --noCommit
           if ($LASTEXITCODE -ne 0) { throw "msstore publish failed" }
 
       - name: Set release notes
