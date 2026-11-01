@@ -4,7 +4,17 @@ sidebar_position: 5
 
 # Running in production
 
-Grab an installer from the
+The easiest way to install it is from the
+[Microsoft Store](https://apps.microsoft.com/detail/9P1XRPJT3126), or with winget:
+
+```powershell
+winget install --id 9P1XRPJT3126 --source msstore
+```
+
+The Store version keeps itself up to date. To deploy it with Intune, add it as a **Microsoft
+Store app (new)** and search for it by name or by its ID, `9P1XRPJT3126`.
+
+If you'd rather not use the Store, grab an installer from the
 [latest release](https://github.com/homotechsual/oncall-busybar-agent/releases/latest). There are
 two options:
 
@@ -15,7 +25,8 @@ two options:
 - **MSIX bundle** (`.msixbundle`), one file for all three. Double-click it to install, or deploy
   it as a line-of-business app in Intune.
 
-Use one or the other. They don't replace each other, so installing both gives you two copies.
+Pick one way to install. The Store version, the MSI and the MSIX bundle don't replace each
+other, so installing more than one gives you more than one copy.
 
 Start the app from the Start menu. It runs as an icon in the notification area, with no window.
 Right-click the icon to sign in the first time. After that, it stays signed in. Your settings go
@@ -25,10 +36,11 @@ opens it. See [Configuration](/configuration).
 To have it start when you sign in to Windows, right-click the icon and check **Start with
 Windows**. For the MSI, this puts a shortcut in your Startup folder. That's deliberate: security
 tools watch registry Run keys closely, and a shortcut does the same job without setting them off. For the
-MSIX, it uses the package's own startup task. Unchecking it undoes either.
+Store version and the MSIX, it uses the package's own startup task. Unchecking it undoes either.
 
 ## Code signing
 
 The installers and the app inside them are signed with Azure Artifact Signing, so SmartScreen
 shouldn't warn you. The signing setup for maintainers is in
 [`OncallAgent.Msi/README.md`](https://github.com/homotechsual/oncall-busybar-agent/tree/main/OncallAgent.Msi).
+The Store version is signed by Microsoft.
