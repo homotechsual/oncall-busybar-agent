@@ -78,7 +78,7 @@ const config: Config = {
           href: 'https://github.com/sponsors/homotechsual',
           label: 'Sponsor',
           position: 'right',
-          className: 'sponsor-link',
+          className: 'support-link',
         },
         {
           href: 'https://github.com/homotechsual/oncall-busybar-agent',
