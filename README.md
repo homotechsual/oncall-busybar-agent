@@ -15,6 +15,9 @@ Everything else (signing in, configuration, Intune and Group Policy, installing,
 
 ## Development
 
+The app talks to the BUSY Bar through [BusyBar .NET](https://dotnet.busy.homotechsual.dev), a typed
+.NET client for the BUSY Bar HTTP API ([`BusyBar` on NuGet](https://www.nuget.org/packages/BusyBar)).
+
 ```bash
 dotnet build OncallAgent.sln
 dotnet test OncallAgent.sln

@@ -108,6 +108,7 @@ const config: Config = {
           items: [
             {label: 'Microsoft Store', href: 'https://apps.microsoft.com/detail/9P1XRPJT3126'},
             {label: 'GitHub', href: 'https://github.com/homotechsual/oncall-busybar-agent'},
+            {label: 'BusyBar .NET', href: 'https://dotnet.busy.homotechsual.dev'},
             {label: 'Sponsor on GitHub', href: 'https://github.com/sponsors/homotechsual'},
           ],
         },
