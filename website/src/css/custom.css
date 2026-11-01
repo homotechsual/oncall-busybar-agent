@@ -14,6 +14,8 @@
   --site-paper: #f6f7f9;
   --site-line: rgba(38, 49, 65, 0.1);
   --site-line-strong: rgba(38, 49, 65, 0.22);
+  /* Matches the corners of Microsoft's Store badge at the size it's shown. */
+  --site-radius: 5px;
 
   --ifm-font-family-base: 'Inter Variable', 'Segoe UI', system-ui, sans-serif;
   --ifm-font-family-monospace: 'Cascadia Code', Consolas, 'SFMono-Regular', Menlo, monospace;
@@ -31,7 +33,7 @@
   --ifm-color-primary-lightest: #cf3a3a;
   --ifm-link-decoration: none;
   --ifm-link-hover-decoration: underline;
-  --ifm-global-radius: 0.5rem;
+  --ifm-global-radius: var(--site-radius);
   --ifm-code-font-size: 92%;
   --ifm-toc-border-color: var(--site-line);
   --ifm-hr-border-color: var(--site-line);
@@ -228,4 +230,17 @@ blockquote {
   background-color: #db61a2;
   -webkit-mask: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20viewBox%3D%270%200%2024%2024%27%3E%3Cpath%20d%3D%27M14%2020.408c-.492.308-.903.546-1.192.709-.153.086-.308.17-.463.252h-.002a.75.75%200%2001-.686%200%2016.709%2016.709%200%2001-.465-.252%2031.147%2031.147%200%2001-4.803-3.34C3.8%2015.572%201%2012.331%201%208.513%201%205.052%203.829%202.5%206.736%202.5%209.03%202.5%2010.881%203.726%2012%205.605%2013.12%203.726%2014.97%202.5%2017.264%202.5%2020.17%202.5%2023%205.052%2023%208.514c0%203.818-2.801%207.06-5.389%209.262A31.146%2031.146%200%200114%2020.408z%27/%3E%3C/svg%3E") center / contain no-repeat;
   mask: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20viewBox%3D%270%200%2024%2024%27%3E%3Cpath%20d%3D%27M14%2020.408c-.492.308-.903.546-1.192.709-.153.086-.308.17-.463.252h-.002a.75.75%200%2001-.686%200%2016.709%2016.709%200%2001-.465-.252%2031.147%2031.147%200%2001-4.803-3.34C3.8%2015.572%201%2012.331%201%208.513%201%205.052%203.829%202.5%206.736%202.5%209.03%202.5%2010.881%203.726%2012%205.605%2013.12%203.726%2014.97%202.5%2017.264%202.5%2020.17%202.5%2023%205.052%2023%208.514c0%203.818-2.801%207.06-5.389%209.262A31.146%2031.146%200%200114%2020.408z%27/%3E%3C/svg%3E") center / contain no-repeat;
+}
+
+/* The footer's heartbeat, played while the link is hovered or focused. */
+.support-link:hover::before,
+.support-link:focus-visible::before {
+  animation: heart 1500ms infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .support-link:hover::before,
+  .support-link:focus-visible::before {
+    animation: none;
+  }
 }

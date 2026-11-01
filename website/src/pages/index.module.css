@@ -74,7 +74,7 @@
   align-items: center;
   min-height: 3rem;
   padding: 0 1.4rem;
-  border-radius: 999px;
+  border-radius: var(--site-radius);
   font-weight: 600;
   text-decoration: none;
   border: 1px solid var(--site-line-strong);
@@ -109,14 +109,15 @@
   margin: 0 auto 1rem;
   padding: 0.25rem;
   border: 1px solid var(--site-line-strong);
-  border-radius: 1.5rem;
+  /* The buttons' radius plus this padding, so the corners sit concentric. */
+  border-radius: calc(var(--site-radius) + 0.25rem);
 }
 
 .previewButton {
   min-height: 2.25rem;
   padding: 0 1rem;
   border: 0;
-  border-radius: 999px;
+  border-radius: var(--site-radius);
   background: transparent;
   color: var(--site-muted);
   font: inherit;
@@ -170,7 +171,7 @@
 .situation {
   padding: 1.5rem;
   border: 1px solid var(--site-line);
-  border-radius: 1rem;
+  border-radius: var(--site-radius);
   background: var(--ifm-background-surface-color);
 }
 

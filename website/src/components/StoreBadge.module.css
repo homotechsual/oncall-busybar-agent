@@ -1,6 +1,6 @@
 .badge {
   display: inline-flex;
-  border-radius: 0.35rem;
+  border-radius: var(--site-radius);
   line-height: 0;
 }
 
