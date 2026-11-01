@@ -65,9 +65,7 @@ export default function AdminConsent(): ReactNode {
                 <code>{result.error}</code>: {result.description}
               </p>
             )}
-            <p>
-              <AdminConsentLink />
-            </p>
+            <AdminConsentLink />
           </>
         )}
 
@@ -79,9 +77,7 @@ export default function AdminConsent(): ReactNode {
               nobody gets asked when they sign in. It asks for Presence.Read and Calendars.ReadBasic, both
               delegated and read-only, plus the standard sign-in permissions.
             </p>
-            <p>
-              <AdminConsentLink />
-            </p>
+            <AdminConsentLink />
             <p className={styles.detail}>
               Microsoft brings you back to this page afterwards. See <Link to="/privacy">Privacy</Link> for what the
               app does with these permissions.

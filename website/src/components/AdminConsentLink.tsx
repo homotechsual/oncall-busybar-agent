@@ -16,8 +16,10 @@ export const ADMIN_CONSENT_URL =
 
 export default function AdminConsentLink(): ReactNode {
   return (
-    <Link href={ADMIN_CONSENT_URL} className={styles.button}>
-      Grant consent for your organization
-    </Link>
+    <div className={styles.wrap}>
+      <Link href={ADMIN_CONSENT_URL} className={styles.button}>
+        Grant consent for your organization
+      </Link>
+    </div>
   );
 }
