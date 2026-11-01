@@ -253,3 +253,12 @@
 .installer a {
   font-weight: 600;
 }
+
+.sponsor {
+  margin: 3rem 0 0;
+  color: var(--site-muted);
+}
+
+.sponsor a {
+  font-weight: 600;
+}

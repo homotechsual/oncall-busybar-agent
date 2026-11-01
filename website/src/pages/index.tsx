@@ -205,6 +205,10 @@ export default function Home(): ReactNode {
               </div>
             ))}
           </div>
+          <p className={styles.sponsor}>
+            It’s free. If it saves you a few interruptions, you can{' '}
+            <Link href="https://github.com/sponsors/homotechsual">sponsor its development on GitHub</Link>.
+          </p>
         </section>
       </main>
     </Layout>

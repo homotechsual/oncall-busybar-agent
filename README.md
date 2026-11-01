@@ -31,6 +31,11 @@ src\OncallAgent\bin\Debug\net10.0-windows\OncallAgent.exe
 Building the installers is covered on the
 [Development](https://oncall.busy.homotechsual.dev/development) docs page.
 
+## Sponsoring
+
+The app is free. If it's useful to you, you can support its development through
+[GitHub Sponsors](https://github.com/sponsors/homotechsual).
+
 ## AI use
 
 AI tools assist with developing this project: Claude Code for things like design and UI work,

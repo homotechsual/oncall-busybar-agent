@@ -75,6 +75,12 @@ const config: Config = {
           label: 'Docs',
         },
         {
+          href: 'https://github.com/sponsors/homotechsual',
+          label: 'Sponsor',
+          position: 'right',
+          className: 'sponsor-link',
+        },
+        {
           href: 'https://github.com/homotechsual/oncall-busybar-agent',
           label: 'GitHub',
           position: 'right',
@@ -102,6 +108,7 @@ const config: Config = {
           items: [
             {label: 'Microsoft Store', href: 'https://apps.microsoft.com/detail/9P1XRPJT3126'},
             {label: 'GitHub', href: 'https://github.com/homotechsual/oncall-busybar-agent'},
+            {label: 'Sponsor on GitHub', href: 'https://github.com/sponsors/homotechsual'},
           ],
         },
       ],
