@@ -19,8 +19,7 @@ public class OnCallStateEvaluatorTests
     [Theory]
     [InlineData("InACall")]
     [InlineData("inacall")]
-    [InlineData("InAMeeting")]
-    [InlineData("inameeting")]
+    [InlineData("InAConferenceCall")]
     [InlineData("Presenting")]
     [InlineData("presenting")]
     public void Evaluate_ReturnsOnCallIndefinite_WhenPresenceIndicatesACall_WithNoMatchingMeeting(string activity)
@@ -35,13 +34,50 @@ public class OnCallStateEvaluatorTests
     [Fact]
     public void Evaluate_ReturnsOnCallUntilMeetingEnd_WhenPresenceIndicatesACall_WithAMatchingMeeting()
     {
-        var presence = new GraphPresenceSnapshot(Availability: "Busy", Activity: "InAMeeting");
+        var presence = new GraphPresenceSnapshot(Availability: "Busy", Activity: "InACall");
         var meetingEnd = DateTimeOffset.UtcNow.AddMinutes(15);
 
         var result = OnCallStateEvaluator.Evaluate(presence, currentMeetingEndUtc: meetingEnd, microphoneActive: false);
 
         var until = Assert.IsType<OnCallUntil>(result);
         Assert.Equal(meetingEnd, until.EndUtc);
+    }
+
+    // InAMeeting comes from the calendar and lasts the whole scheduled slot, so after leaving a
+    // call early presence drops back to it. Without the mic it isn't a call.
+    [Theory]
+    [InlineData("InAMeeting")]
+    [InlineData("inameeting")]
+    public void Evaluate_ReturnsNotOnCall_WhenOnlyTheCalendarSaysInAMeeting_AndMicInactive(string activity)
+    {
+        var presence = new GraphPresenceSnapshot(Availability: "Busy", Activity: activity);
+        var meetingEnd = DateTimeOffset.UtcNow.AddMinutes(30);
+
+        var result = OnCallStateEvaluator.Evaluate(presence, currentMeetingEndUtc: meetingEnd, microphoneActive: false);
+
+        Assert.IsType<NotOnCall>(result);
+    }
+
+    [Fact]
+    public void Evaluate_ReturnsOnCallUntilMeetingEnd_WhenInAMeeting_AndMicActive()
+    {
+        var presence = new GraphPresenceSnapshot(Availability: "Busy", Activity: "InAMeeting");
+        var meetingEnd = DateTimeOffset.UtcNow.AddMinutes(30);
+
+        var result = OnCallStateEvaluator.Evaluate(presence, currentMeetingEndUtc: meetingEnd, microphoneActive: true);
+
+        var until = Assert.IsType<OnCallUntil>(result);
+        Assert.Equal(meetingEnd, until.EndUtc);
+    }
+
+    [Fact]
+    public void Evaluate_ReturnsOnCallIndefinite_WhenInAMeeting_AndMicActive_WithNoMatchingMeeting()
+    {
+        var presence = new GraphPresenceSnapshot(Availability: "Busy", Activity: "InAMeeting");
+
+        var result = OnCallStateEvaluator.Evaluate(presence, currentMeetingEndUtc: null, microphoneActive: true);
+
+        Assert.IsType<OnCallIndefinite>(result);
     }
 
     [Fact]

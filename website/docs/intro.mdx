@@ -10,7 +10,9 @@ in sync with real Microsoft Teams on call status: started (sized to your current
 remaining time when known) the moment you are on a call, stopped the moment you are not.
 
 It reads Microsoft Graph presence as its primary signal (with a calendar lookup for the timer's
-length), and falls back to local microphone activity for calls Graph presence misses.
+length), and falls back to local microphone activity for calls Graph presence misses. A meeting
+that's only on your calendar doesn't count unless your microphone is in use, so leaving a call
+early stops the timer.
 
 ## Sign in
 
