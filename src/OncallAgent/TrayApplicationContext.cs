@@ -1,6 +1,10 @@
+using System.ComponentModel;
+using System.Diagnostics;
+using OncallAgent.Config;
 using OncallAgent.Graph;
 using OncallAgent.Mic;
 using OncallAgent.OnCall;
+using OncallAgent.Packaging;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -20,6 +24,7 @@ public sealed class TrayApplicationContext : ApplicationContext
     private readonly MicrophoneActivityDetector _micDetector;
     private readonly BusyBarTimerController _timerController;
     private readonly IStartupShortcutManager _startupShortcutManager;
+    private readonly IPackagedAppContext _packagedAppContext;
     private readonly ILogger<TrayApplicationContext> _logger;
 
     private GraphPresenceSnapshot? _latestPresence;
@@ -35,6 +40,7 @@ public sealed class TrayApplicationContext : ApplicationContext
         MicrophoneActivityDetector micDetector,
         BusyBarTimerController timerController,
         IStartupShortcutManager startupShortcutManager,
+        IPackagedAppContext packagedAppContext,
         IOptions<GraphOptions> graphOptions,
         IOptions<MicOptions> micOptions,
         ILogger<TrayApplicationContext> logger)
@@ -44,6 +50,7 @@ public sealed class TrayApplicationContext : ApplicationContext
         _micDetector = micDetector;
         _timerController = timerController;
         _startupShortcutManager = startupShortcutManager;
+        _packagedAppContext = packagedAppContext;
         _logger = logger;
 
         var menu = new ContextMenuStrip();
@@ -55,6 +62,7 @@ public sealed class TrayApplicationContext : ApplicationContext
         menu.Items.Add(startupItem);
         _ = InitializeStartupItemAsync(startupItem);
 
+        menu.Items.Add("Open settings file", null, (_, _) => OpenSettingsFile());
         menu.Items.Add("Exit", null, (_, _) => ExitThread());
 
         _icon = new NotifyIcon
@@ -187,6 +195,30 @@ public sealed class TrayApplicationContext : ApplicationContext
         finally
         {
             _graphTimer.Stop();
+        }
+    }
+
+    private void OpenSettingsFile()
+    {
+        var path = UserConfigLocation.GetShellPath(_packagedAppContext.IsPackaged);
+        try
+        {
+            try
+            {
+                Process.Start(new ProcessStartInfo(path) { UseShellExecute = true });
+            }
+            catch (Win32Exception)
+            {
+                // A clean Windows install has no app associated with .json.
+                Process.Start("notepad.exe", $"\"{path}\"");
+            }
+            _icon.ShowBalloonTip(5000, "BUSY Bar on call agent",
+                "Restart the agent after saving for changes to take effect.", ToolTipIcon.Info);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to open settings file.");
+            _icon.ShowBalloonTip(5000, "BUSY Bar on call agent", $"Couldn't open {path}: {ex.Message}", ToolTipIcon.Error);
         }
     }
 

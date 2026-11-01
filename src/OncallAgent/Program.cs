@@ -33,10 +33,7 @@ try
     // The bundled appsettings.json (loaded above via ContentRootPath) ships factory defaults and is
     // read-only once packaged as MSIX; user/IT overrides layer on top of it here, highest precedence
     // last: a per-user writable copy, then an IT-managed registry policy (see RegistryConfigurationProvider).
-    var userConfigPath = Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-        "oncall-busybar-agent",
-        "appsettings.json");
+    var userConfigPath = UserConfigLocation.AppPath;
     UserConfigBootstrapper.EnsureUserConfigExists(
         Path.Combine(AppContext.BaseDirectory, "appsettings.json"),
         userConfigPath);

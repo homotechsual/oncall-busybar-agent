@@ -19,7 +19,7 @@ early stops the timer.
 No setup required to get started: this app ships with a default, shared multi-tenant Entra app
 registration (the `Graph:ClientId` already in `appsettings.json`). The first time you sign in, if
 your organization requires admin consent for third-party apps, ask your Entra admin to grant
-consent for the delegated `Presence.Read` and `Calendars.Read` permissions this app requests.
+consent for the delegated `Presence.Read` and `Calendars.ReadBasic` permissions this app requests.
 After that, anyone in your tenant can sign in with no registration step of their own.
 
 ## Optional: register your own Entra app
@@ -43,7 +43,7 @@ rather run this under an app registration you fully control. Register one in
    `AADSTS50011: The redirect URI ... does not match the redirect URIs configured for the
    application` the moment you try to sign in.
 6. Under **API permissions**, add Microsoft Graph delegated permissions `Presence.Read` and
-   `Calendars.Read`.
+   `Calendars.ReadBasic`.
 7. Copy the **Application (client) ID** from the Overview page, and go back to add it into the
    redirect URI from step 5.
 8. Point this app at your new registration by setting `Graph:ClientId` (and `Graph:TenantId` if

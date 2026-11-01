@@ -21,10 +21,11 @@ running on your own device, and those tokens never pass through anything the pub
 
 - **Microsoft Graph presence** (`Presence.Read`, delegated): read on every poll (every
   `Graph:PollIntervalSeconds`, 30 seconds by default) to detect when you're on a call.
-- **Microsoft Graph calendar** (`Calendars.Read`, delegated): read on that same poll, not only
-  while you're on a call, to size the BUSY Bar timer to your current meeting's remaining time.
-  Only each event's end time is used; event subjects, attendees, locations, and bodies are never
-  used or stored.
+- **Microsoft Graph calendar** (`Calendars.ReadBasic`, delegated): read on that same poll, not
+  only while you're on a call, to size the BUSY Bar timer to your current meeting's remaining
+  time. The app asks Graph for each event's end time and nothing else, so subjects, attendees,
+  locations and bodies never reach your machine. `Calendars.ReadBasic` can't read event bodies
+  or attachments at all.
 - **Local microphone activity**: specifically, Windows' own record of which applications have
   recently used the microphone (not audio content, and not a recording), used only as a fallback
   signal for calls Graph presence misses (for example, a Teams call started outside a scheduled
@@ -54,6 +55,9 @@ presence, calendar, or microphone activity is sent anywhere except the two desti
 - Your per-user `appsettings.json`, under `%LOCALAPPDATA%\oncall-busybar-agent\`.
 
 Both are local to your own Windows user account and are never transmitted anywhere by this app.
+The MSIX version keeps them under its package data
+(`%LOCALAPPDATA%\Packages\OncallBusyBarAgent_<id>\LocalCache\Local\oncall-busybar-agent\`)
+instead, and Windows deletes them when you uninstall it.
 
 ## Your choices
 

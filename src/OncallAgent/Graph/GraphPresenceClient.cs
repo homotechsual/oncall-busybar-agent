@@ -33,7 +33,8 @@ public sealed class GraphPresenceClient : IGraphPresenceClient
     /// <summary>Queries a one-minute window starting now, in UTC (the "Prefer: outlook.timezone"
     /// header pins the returned times to UTC regardless of the mailbox's own time zone setting,
     /// per Microsoft Graph's documented calendarView behavior), and returns the soonest-ending of
-    /// any events that overlap that window.</summary>
+    /// any events that overlap that window. $select=end keeps subjects, attendees and bodies out of
+    /// the response entirely.</summary>
     public async Task<DateTimeOffset?> GetCurrentMeetingEndAsync(CancellationToken cancellationToken)
     {
         var token = await _authService.GetAccessTokenAsync(cancellationToken).ConfigureAwait(false);
@@ -41,7 +42,7 @@ public sealed class GraphPresenceClient : IGraphPresenceClient
         var startDateTime = Uri.EscapeDataString(now.ToString("yyyy-MM-ddTHH:mm:ss", CultureInfo.InvariantCulture));
         var endDateTime = Uri.EscapeDataString(now.AddMinutes(1).ToString("yyyy-MM-ddTHH:mm:ss", CultureInfo.InvariantCulture));
 
-        using var request = new HttpRequestMessage(HttpMethod.Get, $"v1.0/me/calendarView?startDateTime={startDateTime}&endDateTime={endDateTime}");
+        using var request = new HttpRequestMessage(HttpMethod.Get, $"v1.0/me/calendarView?startDateTime={startDateTime}&endDateTime={endDateTime}&$select=end");
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
         request.Headers.Add("Prefer", "outlook.timezone=\"UTC\"");
 

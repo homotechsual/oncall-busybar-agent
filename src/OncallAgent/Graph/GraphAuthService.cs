@@ -8,10 +8,10 @@ namespace OncallAgent.Graph;
 
 /// <summary>MSAL.NET wrapper: interactive sign in on first use (Windows broker where available,
 /// falling back to the system browser), silent token refresh after that, and a disk cache so the
-/// user is not re-prompted on every launch. Requests Presence.Read and Calendars.Read.</summary>
+/// user is not re-prompted on every launch. Requests Presence.Read and Calendars.ReadBasic.</summary>
 public sealed class GraphAuthService : IGraphAuthService
 {
-    private static readonly string[] Scopes = ["Presence.Read", "Calendars.Read"];
+    private static readonly string[] Scopes = ["Presence.Read", "Calendars.ReadBasic"];
 
     [DllImport("user32.dll")]
     private static extern IntPtr GetForegroundWindow();
