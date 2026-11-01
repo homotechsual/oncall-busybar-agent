@@ -1,4 +1,4 @@
-import {useState, type ReactNode} from 'react';
+import {useEffect, useState, type ReactNode} from 'react';
 import Link from '@docusaurus/Link';
 import Layout from '@theme/Layout';
 import BusyBarDisplay from '@site/src/components/BusyBarDisplay';
@@ -49,6 +49,12 @@ const previews = [
 function HeroDevice(): ReactNode {
   const [selected, setSelected] = useState(previews[0].id);
   const preview = previews.find(p => p.id === selected) ?? previews[0];
+
+  // The page is pre-rendered with the first preview; pick one at random once it's running in the
+  // browser, so the server and the browser agree on the first render.
+  useEffect(() => {
+    setSelected(previews[Math.floor(Math.random() * previews.length)].id);
+  }, []);
 
   return (
     <div className={styles.heroDevice}>
