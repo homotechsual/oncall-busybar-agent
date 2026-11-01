@@ -6,9 +6,10 @@ using Microsoft.Identity.Client.Extensions.Msal;
 
 namespace OncallAgent.Graph;
 
-/// <summary>MSAL.NET wrapper: interactive sign in on first use (Windows broker where available,
-/// falling back to the system browser), silent token refresh after that, and a disk cache so the
-/// user is not re-prompted on every launch. Requests Presence.Read and Calendars.ReadBasic.</summary>
+/// <summary>MSAL.NET wrapper: interactive sign in when the user asks for it (Windows broker where
+/// available, falling back to the system browser), silent token refresh after that, and a disk
+/// cache so the user is not re-prompted on every launch. Requests Presence.Read and
+/// Calendars.ReadBasic.</summary>
 public sealed class GraphAuthService : IGraphAuthService
 {
     private static readonly string[] Scopes = ["Presence.Read", "Calendars.ReadBasic"];
@@ -34,33 +35,44 @@ public sealed class GraphAuthService : IGraphAuthService
         cacheHelper.RegisterCache(_app.UserTokenCache);
     }
 
+    // Background polling calls this every cycle, so it must never show UI: someone who hasn't signed
+    // in would otherwise get a sign-in window every poll. The microphone check still works without it.
     public async Task<string> GetAccessTokenAsync(CancellationToken cancellationToken)
     {
         var accounts = await _app.GetAccountsAsync().ConfigureAwait(false);
-        var account = accounts.FirstOrDefault();
+        var account = accounts.FirstOrDefault() ?? throw new NotSignedInException(hadAccount: false);
 
-        if (account is not null)
+        try
         {
-            try
-            {
-                var silentResult = await _app.AcquireTokenSilent(Scopes, account)
-                    .ExecuteAsync(cancellationToken).ConfigureAwait(false);
-                return silentResult.AccessToken;
-            }
-            catch (MsalUiRequiredException)
-            {
-                // Falls through to interactive sign in below.
-            }
+            var silentResult = await _app.AcquireTokenSilent(Scopes, account)
+                .ExecuteAsync(cancellationToken).ConfigureAwait(false);
+            return silentResult.AccessToken;
+        }
+        catch (MsalUiRequiredException ex)
+        {
+            throw new NotSignedInException(hadAccount: true, ex);
+        }
+    }
+
+    public async Task SignInAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            await GetAccessTokenAsync(cancellationToken).ConfigureAwait(false);
+            return;
+        }
+        catch (NotSignedInException)
+        {
+            // Falls through to interactive sign in below.
         }
 
         // The WAM broker requires a parent window handle to attach its sign-in dialog to;
         // AcquireTokenInteractive throws MsalClientException("window_handle_required") without
         // one. This is a tray-only app with no main window, so the foreground window at the
         // moment sign-in is triggered (whatever the user just clicked) stands in as the parent.
-        var interactiveResult = await _app.AcquireTokenInteractive(Scopes)
+        await _app.AcquireTokenInteractive(Scopes)
             .WithParentActivityOrWindow(GetForegroundWindow())
             .ExecuteAsync(cancellationToken).ConfigureAwait(false);
-        return interactiveResult.AccessToken;
     }
 
     public async Task SignOutAsync()

@@ -32,6 +32,8 @@ public sealed class TrayApplicationContext : ApplicationContext
     private bool _latestMicActive;
     private bool _pollingPaused;
     private bool _lastGraphPollFailed;
+    private bool _signedIn;
+    private bool _renewalNotified;
     private bool _suppressStartupCheckedChanged;
 
     public TrayApplicationContext(
@@ -86,6 +88,10 @@ public sealed class TrayApplicationContext : ApplicationContext
         {
             _micTimer.Start();
         }
+
+        // Check straight away rather than after the first interval, so the tooltip shows whether
+        // you're signed in from the start.
+        _ = PollGraphAsync();
     }
 
     private async Task PollGraphAsync()
@@ -99,7 +105,24 @@ public sealed class TrayApplicationContext : ApplicationContext
         {
             _latestPresence = await _presenceClient.GetPresenceAsync(CancellationToken.None).ConfigureAwait(true);
             _latestMeetingEnd = await _presenceClient.GetCurrentMeetingEndAsync(CancellationToken.None).ConfigureAwait(true);
+            _signedIn = true;
             _lastGraphPollFailed = false;
+        }
+        catch (NotSignedInException ex)
+        {
+            // Not an error: without a sign-in the agent runs on the microphone check alone.
+            _latestPresence = null;
+            _latestMeetingEnd = null;
+            _signedIn = false;
+            _lastGraphPollFailed = false;
+
+            if (ex.HadAccount && !_renewalNotified)
+            {
+                _renewalNotified = true;
+                _icon.ShowBalloonTip(5000, "BUSY Bar on call agent",
+                    "Sign in again from the tray menu to use Teams presence. Until then, only your microphone is checked.",
+                    ToolTipIcon.Warning);
+            }
         }
         catch (Exception ex)
         {
@@ -155,8 +178,13 @@ public sealed class TrayApplicationContext : ApplicationContext
             _ => "BUSY Bar: idle"
         };
 
+        if (!_signedIn)
+        {
+            return $"{summary} (microphone only, not signed in)";
+        }
+
         return _lastGraphPollFailed
-            ? $"{summary} (last Graph poll failed; signed out?)"
+            ? $"{summary} (last Teams check failed)"
             : summary;
     }
 
@@ -164,12 +192,10 @@ public sealed class TrayApplicationContext : ApplicationContext
     {
         try
         {
-            await _authService.GetAccessTokenAsync(CancellationToken.None).ConfigureAwait(true);
-            if (!_graphTimer.Enabled)
-            {
-                _graphTimer.Start();
-            }
+            await _authService.SignInAsync(CancellationToken.None).ConfigureAwait(true);
+            _renewalNotified = false;
             _icon.ShowBalloonTip(5000, "BUSY Bar on call agent", "Signed in.", ToolTipIcon.Info);
+            await PollGraphAsync().ConfigureAwait(true);
         }
         catch (Exception ex)
         {
@@ -185,17 +211,17 @@ public sealed class TrayApplicationContext : ApplicationContext
         try
         {
             await _authService.SignOutAsync().ConfigureAwait(true);
-            _icon.ShowBalloonTip(5000, "BUSY Bar on call agent", "Signed out.", ToolTipIcon.Info);
+            _icon.ShowBalloonTip(5000, "BUSY Bar on call agent", "Signed out. Only your microphone is checked now.", ToolTipIcon.Info);
         }
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "Sign out failed.");
             _icon.ShowBalloonTip(5000, "BUSY Bar on call agent", $"Sign out failed: {ex.Message}", ToolTipIcon.Error);
         }
-        finally
-        {
-            _graphTimer.Stop();
-        }
+
+        // The Graph timer keeps running: with nobody signed in, each check returns straight away
+        // without touching the network, and picks the sign-in up again if one appears.
+        await PollGraphAsync().ConfigureAwait(true);
     }
 
     private void OpenSettingsFile()

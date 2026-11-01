@@ -9,11 +9,31 @@ namespace OncallAgent.Tests.Graph;
 file sealed class FakeGraphAuthService : IGraphAuthService
 {
     public Task<string> GetAccessTokenAsync(CancellationToken cancellationToken) => Task.FromResult("fake-token");
+    public Task SignInAsync(CancellationToken cancellationToken) => Task.CompletedTask;
+    public Task SignOutAsync() => Task.CompletedTask;
+}
+
+file sealed class SignedOutGraphAuthService : IGraphAuthService
+{
+    public Task<string> GetAccessTokenAsync(CancellationToken cancellationToken) => throw new NotSignedInException(hadAccount: false);
+    public Task SignInAsync(CancellationToken cancellationToken) => Task.CompletedTask;
     public Task SignOutAsync() => Task.CompletedTask;
 }
 
 public class GraphPresenceClientTests
 {
+    [Fact]
+    public async Task GetPresenceAsync_WhenNobodyIsSignedIn_ThrowsWithoutCallingGraph()
+    {
+        var handler = new FakeHttpMessageHandler { ResponseBody = "{}" };
+        var http = new HttpClient(handler) { BaseAddress = new Uri("https://graph.microsoft.com/") };
+        var client = new GraphPresenceClient(http, new SignedOutGraphAuthService());
+
+        await Assert.ThrowsAsync<NotSignedInException>(() => client.GetPresenceAsync(CancellationToken.None));
+        await Assert.ThrowsAsync<NotSignedInException>(() => client.GetCurrentMeetingEndAsync(CancellationToken.None));
+        Assert.Null(handler.LastRequest);
+    }
+
     private static (GraphPresenceClient client, FakeHttpMessageHandler handler) CreateClient()
     {
         var handler = new FakeHttpMessageHandler { ResponseBody = "{\"availability\":\"Busy\",\"activity\":\"InACall\"}" };
