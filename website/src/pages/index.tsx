@@ -217,7 +217,9 @@ export default function Home(): ReactNode {
           </div>
           <p className={styles.support}>
             It’s free. If it saves you a few interruptions, you can{' '}
-            <Link href="https://github.com/sponsors/homotechsual">sponsor its development on GitHub</Link>.
+            <Link href="https://github.com/sponsors/homotechsual">sponsor its development on GitHub</Link>. It’s
+            built on <Link href="https://dotnet.busy.homotechsual.dev">BusyBar .NET</Link>, a .NET client for the
+            BUSY Bar API.
           </p>
         </section>
       </main>
