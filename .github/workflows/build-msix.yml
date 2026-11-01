@@ -1,6 +1,7 @@
 name: Build MSIX package
 
-# Builds the Store .msixupload. Submission to Partner Center is still manual.
+# Checks the Store package still builds on every push. The versioned .msixupload to submit to
+# Partner Center comes from the store job in release.yml.
 
 on:
   workflow_dispatch:

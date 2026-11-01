@@ -68,7 +68,7 @@
     <GenerateTestArtifacts>False</GenerateTestArtifacts>
     <AppInstallerUri>J:\Projects\</AppInstallerUri>
     <HoursBetweenUpdateChecks>0</HoursBetweenUpdateChecks>
-    <PackageCertificateThumbprint>AA5343648D43C512A49122DDCB6254A9A76F99EC</PackageCertificateThumbprint>
+    <PackageCertificateThumbprint>B227522AC95208A2B638E5DC2BF0244BC43A95E4</PackageCertificateThumbprint>
   </PropertyGroup>
   <ItemGroup>
     <AppxManifest Include="Package.appxmanifest">

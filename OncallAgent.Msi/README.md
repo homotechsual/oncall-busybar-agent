@@ -86,3 +86,13 @@ Signing needs the one-time Azure setup below.
 
 After that, pushing a `v*.*.*` tag runs the release. A manual run (workflow_dispatch) builds and
 signs everything without publishing, which is handy for testing.
+
+## Microsoft Store
+
+The release run also builds an unsigned `.msixupload` for the Store, as the
+`store-msixupload-<version>` artifact. It isn't attached to the GitHub release. Upload it to a new
+submission in Partner Center (Store ID `9P1XRPJT3126`).
+
+`Package.appxmanifest` holds the Store identity from Partner Center's **Product identity** page.
+The sideload build swaps `Publisher` for the signing certificate's subject, so the two installs are
+separate apps that can sit side by side.

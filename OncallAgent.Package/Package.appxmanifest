@@ -8,19 +8,18 @@
   IgnorableNamespaces="uap rescap desktop">
 
   <Identity
-    Name="OncallBusyBarAgent"
-    Publisher="CN=homotechsual"
+    Name="MJCOLtd.OnCallBusyBarAgent"
+    Publisher="CN=0F85AA1C-4085-469E-B1CB-993E79A0DB19"
     Version="1.0.7.0" />
 
   <Properties>
     <DisplayName>BUSY Bar on call agent</DisplayName>
-    <PublisherDisplayName>homotechsual</PublisherDisplayName>
+    <PublisherDisplayName>MJCO Ltd</PublisherDisplayName>
     <Logo>Images\StoreLogo.png</Logo>
   </Properties>
 
   <Dependencies>
-    <TargetDeviceFamily Name="Windows.Universal" MinVersion="10.0.0.0" MaxVersionTested="10.0.0.0" />
-    <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.14393.0" MaxVersionTested="10.0.14393.0" />
+    <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.17763.0" MaxVersionTested="10.0.26100.0" />
   </Dependencies>
 
   <Resources>

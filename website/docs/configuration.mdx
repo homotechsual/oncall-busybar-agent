@@ -14,7 +14,7 @@ Settings load in four layers, each overriding the one before it:
    one under `src/OncallAgent`) to change settings after that first run; it survives updates,
    which the bundled file's location does not once the app is installed as an MSIX package.
    The MSIX version keeps this file inside its package data instead, at
-   `%LOCALAPPDATA%\Packages\OncallBusyBarAgent_<id>\LocalCache\Local\oncall-busybar-agent\`,
+   `%LOCALAPPDATA%\Packages\MJCOLtd.OnCallBusyBarAgent_<id>\LocalCache\Local\oncall-busybar-agent\`,
    and Windows removes it on uninstall. Either way, **Open settings file** in the tray icon's
    menu opens the right one. Restart the agent after saving.
 4. An IT-managed registry policy, for organizations deploying this via Intune or another MDM tool.

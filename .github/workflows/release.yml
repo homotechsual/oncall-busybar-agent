@@ -1,7 +1,8 @@
 name: Release
 
 # Builds an MSI per architecture and a sideload MSIX bundle, signs them with Azure Artifact
-# Signing and attaches them to a GitHub Release. Azure setup is in OncallAgent.Msi/README.md.
+# Signing and attaches them to a GitHub Release. Also builds the Store .msixupload for Partner
+# Center. Azure setup is in OncallAgent.Msi/README.md.
 # Signing jobs run in the "release" environment because the federated credential is scoped to it.
 
 on:
@@ -243,6 +244,61 @@ jobs:
         with:
           name: release-msix
           path: ${{ steps.bundle.outputs.path }}
+          if-no-files-found: error
+
+  # Unsigned: the Store signs it after certification. The artifact isn't attached to the GitHub
+  # release; upload it to Partner Center as a new submission.
+  store:
+    needs: [version, test]
+    runs-on: windows-latest
+    env:
+      VERSION: ${{ needs.version.outputs.version }}
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v3
+
+      # The checked-in identity is already the Store one; only the version changes. The Store
+      # requires the last part to be 0.
+      - name: Set package version
+        shell: pwsh
+        run: |
+          $manifestPath = (Resolve-Path "OncallAgent.Package\Package.appxmanifest").Path
+          $manifest = New-Object System.Xml.XmlDocument
+          $manifest.PreserveWhitespace = $true
+          $manifest.Load($manifestPath)
+          $manifest.Package.Identity.Version = "$env:VERSION.0"
+          $manifest.Save($manifestPath)
+
+      - name: Restore packaging project
+        run: msbuild OncallAgent.Package/OncallAgent.Package.wapproj /t:Restore /p:Configuration=Release
+
+      - name: Build Store package
+        run: >
+          msbuild OncallAgent.Package/OncallAgent.Package.wapproj
+          /t:Publish
+          /p:Configuration=Release
+          /p:Version=${{ env.VERSION }}
+          /p:AppxBundlePlatforms="x86|x64|arm64"
+          /p:AppxBundle=Always
+          /p:UapAppxPackageBuildMode=StoreUpload
+          /p:AppxPackageSigningEnabled=false
+          /p:AppxAutoIncrementPackageRevision=false
+          /p:PackageTargetPlatformVersion=10.0.26100.0
+          /p:AppxPackageDir=AppPackages\
+
+      - name: Upload Store package artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: store-msixupload-${{ env.VERSION }}
+          path: OncallAgent.Package/AppPackages/*.msixupload
           if-no-files-found: error
 
   release:
