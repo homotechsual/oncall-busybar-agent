@@ -93,7 +93,7 @@ The release run also builds an unsigned `.msixupload` for the Store, as the
 `store-msixupload-<version>` artifact. It isn't attached to the GitHub release. On a tag push, the
 `store-submit` job uploads it to Partner Center (Store ID `9P1XRPJT3126`) and submits it for
 certification, keeping the listing from the last published submission. Manual runs build the
-package but don't submit it.
+package but only submit it if you tick **Submit the Store package**.
 
 The "What's new in this version" text comes from the annotated tag's message, so write the notes
 when you tag:
@@ -103,8 +103,10 @@ git tag -a v1.0.1 -m "Fixes the timer running on after you leave a meeting early
 ```
 
 A lightweight tag, or a message that's just the tag name, leaves the release notes blank. Partner
-Center won't take a new submission while one is still in certification; if that happens, re-run
-the job once the earlier one finishes.
+Center won't take a new submission while one is still in certification. To retry a tagged
+release's submission, start the Release workflow manually with the same version and **Submit the
+Store package** ticked; it still uses that tag's message for the release notes. Re-running the
+failed job instead would reuse the workflow file from the tag.
 
 ### One-time Partner Center setup
 

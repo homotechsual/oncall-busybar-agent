@@ -15,6 +15,11 @@ on:
         description: "Release version (for example 1.0.0 or v1.0.0)"
         required: true
         type: string
+      submit_to_store:
+        description: "Submit the Store package to Partner Center (for retrying a tagged release's submission)"
+        required: false
+        type: boolean
+        default: false
 
 jobs:
   version:
@@ -301,12 +306,12 @@ jobs:
           path: OncallAgent.Package/AppPackages/*.msixupload
           if-no-files-found: error
 
-  # Submits the Store package for certification on tag pushes, once everything else has built.
-  # The annotated tag's message becomes the "What's new" text. Partner Center setup is in
-  # OncallAgent.Msi/README.md.
+  # Submits the Store package for certification on tag pushes, once everything else has built, or
+  # on a manual run with submit_to_store ticked. The annotated tag's message becomes the "What's
+  # new" text. Partner Center setup is in OncallAgent.Msi/README.md.
   store-submit:
     needs: [version, msi, msix, store]
-    if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') }}
+    if: ${{ (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')) || inputs.submit_to_store }}
     runs-on: windows-latest
     environment: release
     env:
@@ -316,15 +321,16 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      # checkout doesn't fetch the tag object, so its message isn't available otherwise. A
+      # checkout doesn't fetch the tag object, so its message isn't available otherwise. A missing or
       # lightweight tag, or one whose message is just the tag name, gives no release notes.
       - name: Read release notes from the tag
         shell: pwsh
         run: |
-          git fetch --force origin "refs/tags/${env:GITHUB_REF_NAME}:refs/tags/${env:GITHUB_REF_NAME}"
-          $type = git cat-file -t $env:GITHUB_REF_NAME
-          $notes = if ($type -eq 'tag') { (git tag -l --format='%(contents:subject)%0a%0a%(contents:body)' $env:GITHUB_REF_NAME | Out-String).Trim() } else { '' }
-          if ($notes -eq $env:GITHUB_REF_NAME) { $notes = '' }
+          $tag = "v$env:VERSION"
+          git fetch --force origin "refs/tags/${tag}:refs/tags/${tag}" 2>$null
+          $type = if ($LASTEXITCODE -eq 0) { git cat-file -t $tag } else { '' }
+          $notes = if ($type -eq 'tag') { (git tag -l --format='%(contents:subject)%0a%0a%(contents:body)' $tag | Out-String).Trim() } else { '' }
+          if ($notes -eq $tag) { $notes = '' }
           # The Store's limit for release notes.
           if ($notes.Length -gt 1500) { $notes = $notes.Substring(0, 1500) }
           Set-Content -Path release-notes.txt -Value $notes -NoNewline
@@ -336,8 +342,12 @@ jobs:
           name: store-msixupload-${{ env.VERSION }}
           path: store
 
+      # Pinned: the CLI's options have changed between releases (v0.4.3 takes --inputDirectory,
+      # where Microsoft's docs already describe --inputFile).
       - name: Setup Microsoft Store Developer CLI
         uses: microsoft/microsoft-store-apppublisher@v1.4
+        with:
+          version: v0.4.3
 
       - name: Configure Microsoft Store Developer CLI
         run: |
@@ -350,7 +360,7 @@ jobs:
         shell: pwsh
         run: |
           $package = Get-ChildItem store -Filter *.msixupload | Select-Object -First 1
-          msstore publish $package.DirectoryName --inputFile $package.FullName --appId $env:PRODUCT_ID --noCommit
+          msstore publish $package.DirectoryName --inputDirectory $package.DirectoryName --appId $env:PRODUCT_ID --noCommit
           if ($LASTEXITCODE -ne 0) { throw "msstore publish failed" }
 
       - name: Set release notes
@@ -363,7 +373,9 @@ jobs:
           $listing = $submission.Listings.'en-us'
           if (-not $listing) { throw "The submission has no en-us listing" }
           $listing.BaseListing.ReleaseNotes = $notes
-          msstore submission update $env:PRODUCT_ID ($submission | ConvertTo-Json -Depth 100 -Compress)
+          # The CLI accepts a path to a JSON file, which avoids quoting the whole submission.
+          $submission | ConvertTo-Json -Depth 100 | Set-Content -Path submission.json -Encoding utf8NoBOM
+          msstore submission update $env:PRODUCT_ID submission.json
           if ($LASTEXITCODE -ne 0) { throw "msstore submission update failed" }
 
       - name: Submit for certification
