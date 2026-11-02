@@ -5,6 +5,9 @@ import {DOCUSAURUS_VERSION} from '@docusaurus/utils';
 import plausiblePlugin from '@homotechsual/docusaurus-plugin-plausible';
 import type {PluginOptions as PlausiblePluginOptions} from '@homotechsual/docusaurus-plugin-plausible';
 
+const {docs: docsOgRenderer, pages: pagesOgRenderer} = require('./lib/ImageRenderers.cjs');
+const ogPlugin = require('@homotechsual/docusaurus-og');
+
 // This runs in Node.js - Don't use client-side code here (browser APIs, JSX...)
 
 const config: Config = {
@@ -53,9 +56,22 @@ const config: Config = {
         domain: 'oncall.busy.homotechsual.dev',
       } satisfies PlausiblePluginOptions,
     ],
+    [
+      ogPlugin,
+      {
+        path: './og-img',
+        imageRenderers: {
+          'docusaurus-plugin-content-docs': docsOgRenderer,
+          'docusaurus-plugin-content-pages': pagesOgRenderer,
+        },
+      },
+    ],
   ],
 
   themeConfig: {
+    // Fallback share preview; the OG plugin above replaces it with a per-page image at build time.
+    image: 'img/social-card.png',
+    metadata: [{name: 'twitter:card', content: 'summary_large_image'}],
     colorMode: {
       defaultMode: 'dark',
       disableSwitch: false,
