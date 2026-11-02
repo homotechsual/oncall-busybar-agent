@@ -1,13 +1,11 @@
 # oncall-busybar-agent
 
-[![Build](https://img.shields.io/github/actions/workflow/status/homotechsual/oncall-busybar-agent/build-msix.yml?branch=main&style=for-the-badge&label=Build)](https://github.com/homotechsual/oncall-busybar-agent/actions/workflows/build-msix.yml)
-[![Release](https://img.shields.io/github/actions/workflow/status/homotechsual/oncall-busybar-agent/release.yml?style=for-the-badge&label=Release)](https://github.com/homotechsual/oncall-busybar-agent/actions/workflows/release.yml)
+[![CI](https://img.shields.io/github/actions/workflow/status/homotechsual/oncall-busybar-agent/ci.yml?branch=main&style=for-the-badge&label=CI)](https://github.com/homotechsual/oncall-busybar-agent/actions/workflows/ci.yml)
+[![Coverage](https://img.shields.io/codecov/c/github/homotechsual/oncall-busybar-agent?style=for-the-badge&label=Coverage)](https://codecov.io/gh/homotechsual/oncall-busybar-agent)
 [![Docs deploy](https://img.shields.io/github/actions/workflow/status/homotechsual/oncall-busybar-agent/deploy-docs.yml?branch=main&style=for-the-badge&label=Docs%20deploy)](https://github.com/homotechsual/oncall-busybar-agent/actions/workflows/deploy-docs.yml)
 [![Latest release](https://img.shields.io/github/v/release/homotechsual/oncall-busybar-agent?sort=semver&style=for-the-badge&label=Latest%20release&logo=github)](https://github.com/homotechsual/oncall-busybar-agent/releases/latest)
-[![Downloads](https://img.shields.io/github/downloads/homotechsual/oncall-busybar-agent/total?style=for-the-badge&label=Downloads)](https://github.com/homotechsual/oncall-busybar-agent/releases)
 [![License: MIT](https://img.shields.io/github/license/homotechsual/oncall-busybar-agent?style=for-the-badge&label=License)](LICENSE)
 [![Homotechsual Discord](https://img.shields.io/discord/1075421628424523816?style=for-the-badge&logo=discord&logoColor=white&label=Homotechsual%20Discord)](https://discord.homotechsual.dev)
-[![GitHub Sponsors](https://img.shields.io/github/sponsors/homotechsual?style=for-the-badge)](https://github.com/sponsors/homotechsual)
 [![Docs](https://img.shields.io/badge/docs-oncall.busy.homotechsual.dev-a42828?style=for-the-badge)](https://oncall.busy.homotechsual.dev)
 
 A Windows tray app that runs your BUSY Bar's timer while you're on a Microsoft Teams call. The

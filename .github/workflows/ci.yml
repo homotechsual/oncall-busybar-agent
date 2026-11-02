@@ -1,0 +1,68 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    # The app and its tests target Windows (WinForms, WinRT APIs).
+    runs-on: windows-latest
+    env:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Restore
+        run: dotnet restore test/OncallAgent.Tests/OncallAgent.Tests.csproj
+
+      - name: Build
+        run: dotnet build test/OncallAgent.Tests/OncallAgent.Tests.csproj --no-restore -c Release
+
+      # coverage.runsettings leaves the test assembly out, so the percentage is for the app only.
+      # The junit logger feeds Codecov's Test Analytics (separate from the coverage upload below).
+      - name: Test
+        run: dotnet test test/OncallAgent.Tests/OncallAgent.Tests.csproj --no-build -c Release --settings coverage.runsettings --results-directory ./TestResults --logger "junit;LogFilePath=${{ github.workspace }}/TestResults/test-results.xml"
+
+      - name: Locate coverage report
+        id: coverage
+        shell: bash
+        run: |
+          file=$(find ./TestResults -name '*.cobertura.xml' -print -quit)
+          echo "file=$file" >> "$GITHUB_OUTPUT"
+
+      # Skipped until the repository has a CODECOV_TOKEN secret, and on pull requests from forks,
+      # which don't get secrets.
+      - name: Upload coverage to Codecov
+        if: ${{ env.CODECOV_TOKEN != '' }}
+        uses: codecov/codecov-action@v7
+        with:
+          files: ${{ steps.coverage.outputs.file }}
+          flags: unittests
+          disable_search: true
+          token: ${{ env.CODECOV_TOKEN }}
+          fail_ci_if_error: true
+
+      # Runs even if the Test step failed: a failing or flaky run is what Test Analytics needs to see.
+      - name: Upload test results to Codecov
+        if: ${{ !cancelled() && env.CODECOV_TOKEN != '' }}
+        uses: codecov/codecov-action@v7
+        with:
+          files: ./TestResults/test-results.xml
+          report_type: test_results
+          flags: unittests
+          disable_search: true
+          token: ${{ env.CODECOV_TOKEN }}
+          fail_ci_if_error: true
