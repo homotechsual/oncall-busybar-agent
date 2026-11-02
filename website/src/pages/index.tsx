@@ -6,7 +6,9 @@ import StoreBadge, {STORE_URL} from '@site/src/components/StoreBadge';
 import useLatestVersions, {type LatestVersions} from '@site/src/components/useLatestVersions';
 import styles from './index.module.css';
 
-const RELEASES_URL = 'https://github.com/homotechsual/oncall-busybar-agent/releases/latest';
+const GITHUB_URL = 'https://github.com/homotechsual/oncall-busybar-agent';
+const RELEASES_URL = `${GITHUB_URL}/releases/latest`;
+const DISCORD_URL = 'https://discord.homotechsual.dev';
 
 const previews = [
   {
@@ -176,6 +178,12 @@ export default function Home(): ReactNode {
               <StoreBadge />
               <Link className={styles.secondary} to="/getting-started">
                 Read the docs
+              </Link>
+              <Link className={styles.discord} href={DISCORD_URL}>
+                Join the Discord
+              </Link>
+              <Link className={styles.quiet} href={GITHUB_URL}>
+                View on GitHub
               </Link>
             </div>
             <p className={styles.requirements}>

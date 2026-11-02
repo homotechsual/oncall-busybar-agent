@@ -1,5 +1,16 @@
 # oncall-busybar-agent
 
+<a href="https://apps.microsoft.com/detail/9P1XRPJT3126">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://oncall.busy.homotechsual.dev/img/ms-store-badge-light.svg">
+    <img alt="Download from the Microsoft Store" src="https://oncall.busy.homotechsual.dev/img/ms-store-badge-dark.svg" width="161" height="44">
+  </picture>
+</a>
+
+[![Latest release](https://img.shields.io/github/v/release/homotechsual/oncall-busybar-agent?label=release)](https://github.com/homotechsual/oncall-busybar-agent/releases/latest)
+[![Documentation](https://img.shields.io/badge/docs-oncall.busy.homotechsual.dev-263141)](https://oncall.busy.homotechsual.dev)
+[![Discord](https://img.shields.io/badge/Discord-join-5865F2?logo=discord&logoColor=white)](https://discord.homotechsual.dev)
+
 A Windows tray app that runs your BUSY Bar's timer while you're on a Microsoft Teams call. The
 timer starts when a call starts and stops when it ends. For a scheduled meeting, it counts down to
 the meeting's end time.

@@ -67,9 +67,14 @@
   flex-wrap: wrap;
   gap: 0.75rem;
   margin-top: 2rem;
+  /* Wider than the text column above, so the buttons stay on one line where there's room. */
+  width: max-content;
+  max-width: calc(100vw - 2 * var(--gutter));
 }
 
-.secondary {
+.secondary,
+.discord,
+.quiet {
   display: inline-flex;
   align-items: center;
   min-height: 3rem;
@@ -84,6 +89,32 @@
 
 .secondary:hover {
   border-color: var(--site-heading);
+  color: var(--site-heading);
+  text-decoration: none;
+}
+
+/* Discord's own blurple, as on the other homotechsual sites. */
+.discord {
+  border-color: #5865f2;
+  background: #5865f2;
+  color: #fff;
+  transition: background-color 150ms ease, border-color 150ms ease;
+}
+
+.discord:hover {
+  border-color: #4752c4;
+  background: #4752c4;
+  color: #fff;
+  text-decoration: none;
+}
+
+.quiet {
+  border-color: var(--site-line);
+  color: var(--site-muted);
+}
+
+.quiet:hover {
+  border-color: var(--site-line-strong);
   color: var(--site-heading);
   text-decoration: none;
 }
