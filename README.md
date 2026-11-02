@@ -1,15 +1,14 @@
 # oncall-busybar-agent
 
-<a href="https://apps.microsoft.com/detail/9P1XRPJT3126">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://oncall.busy.homotechsual.dev/img/ms-store-badge-light.svg">
-    <img alt="Download from the Microsoft Store" src="https://oncall.busy.homotechsual.dev/img/ms-store-badge-dark.svg" width="161" height="44">
-  </picture>
-</a>
-
-[![Latest release](https://img.shields.io/github/v/release/homotechsual/oncall-busybar-agent?label=release)](https://github.com/homotechsual/oncall-busybar-agent/releases/latest)
-[![Documentation](https://img.shields.io/badge/docs-oncall.busy.homotechsual.dev-263141)](https://oncall.busy.homotechsual.dev)
-[![Discord](https://img.shields.io/badge/Discord-join-5865F2?logo=discord&logoColor=white)](https://discord.homotechsual.dev)
+[![Build](https://img.shields.io/github/actions/workflow/status/homotechsual/oncall-busybar-agent/build-msix.yml?branch=main&style=for-the-badge&label=Build)](https://github.com/homotechsual/oncall-busybar-agent/actions/workflows/build-msix.yml)
+[![Release](https://img.shields.io/github/actions/workflow/status/homotechsual/oncall-busybar-agent/release.yml?style=for-the-badge&label=Release)](https://github.com/homotechsual/oncall-busybar-agent/actions/workflows/release.yml)
+[![Docs deploy](https://img.shields.io/github/actions/workflow/status/homotechsual/oncall-busybar-agent/deploy-docs.yml?branch=main&style=for-the-badge&label=Docs%20deploy)](https://github.com/homotechsual/oncall-busybar-agent/actions/workflows/deploy-docs.yml)
+[![Latest release](https://img.shields.io/github/v/release/homotechsual/oncall-busybar-agent?sort=semver&style=for-the-badge&label=Latest%20release&logo=github)](https://github.com/homotechsual/oncall-busybar-agent/releases/latest)
+[![Downloads](https://img.shields.io/github/downloads/homotechsual/oncall-busybar-agent/total?style=for-the-badge&label=Downloads)](https://github.com/homotechsual/oncall-busybar-agent/releases)
+[![License: MIT](https://img.shields.io/github/license/homotechsual/oncall-busybar-agent?style=for-the-badge&label=License)](LICENSE)
+[![Homotechsual Discord](https://img.shields.io/discord/1075421628424523816?style=for-the-badge&logo=discord&logoColor=white&label=Homotechsual%20Discord)](https://discord.homotechsual.dev)
+[![GitHub Sponsors](https://img.shields.io/github/sponsors/homotechsual?style=for-the-badge)](https://github.com/sponsors/homotechsual)
+[![Docs](https://img.shields.io/badge/docs-oncall.busy.homotechsual.dev-a42828?style=for-the-badge)](https://oncall.busy.homotechsual.dev)
 
 A Windows tray app that runs your BUSY Bar's timer while you're on a Microsoft Teams call. The
 timer starts when a call starts and stops when it ends. For a scheduled meeting, it counts down to
@@ -18,6 +17,13 @@ the meeting's end time.
 Teams presence from Microsoft Graph is the main signal, with a calendar lookup for the meeting's
 end time. For calls Teams doesn't report, the app falls back to checking whether your microphone
 is in use. Signing in is optional: without it, the microphone check works on its own.
+
+<a href="https://apps.microsoft.com/detail/9P1XRPJT3126">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://oncall.busy.homotechsual.dev/img/ms-store-badge-light.svg">
+    <img alt="Download from the Microsoft Store" src="https://oncall.busy.homotechsual.dev/img/ms-store-badge-dark.svg" width="161" height="44">
+  </picture>
+</a>
 
 ## Documentation
 
