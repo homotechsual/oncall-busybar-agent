@@ -386,6 +386,30 @@ jobs:
           msstore submission publish $env:PRODUCT_ID
           if ($LASTEXITCODE -ne 0) { throw "msstore submission publish failed" }
 
+      # Publishing only starts the commit. Partner Center finishes it in the background, and if it
+      # fails the submission quietly goes back to being a draft, so wait for the outcome here.
+      - name: Wait for the submission to commit
+        shell: pwsh
+        run: |
+          $deadline = (Get-Date).AddMinutes(15)
+          do {
+            Start-Sleep -Seconds 30
+            $submission = msstore submission get $env:PRODUCT_ID | Out-String | ConvertFrom-Json
+            if ($LASTEXITCODE -ne 0) { throw "msstore submission get failed" }
+            "Status: $($submission.Status)"
+          } while ($submission.Status -eq 'CommitStarted' -and (Get-Date) -lt $deadline)
+
+          $details = $submission.StatusDetails
+          foreach ($e in $details.Errors) { "::error::$($e.Code): $($e.Details)" }
+          foreach ($w in $details.Warnings) { "::warning::$($w.Code): $($w.Details)" }
+          foreach ($c in $details.CertificationReports) { "Certification report: $($c.ReportUrl)" }
+
+          switch ($submission.Status) {
+            'CommitFailed' { throw "Partner Center rejected the submission. It's back to a draft; see the errors above." }
+            'CommitStarted' { throw "The submission was still committing after 15 minutes. Check it in Partner Center." }
+            default { "The submission committed and is now $($submission.Status)." }
+          }
+
   release:
     needs: [msi, msix]
     if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') }}
