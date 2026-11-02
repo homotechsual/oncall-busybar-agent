@@ -3,6 +3,7 @@ import Link from '@docusaurus/Link';
 import Layout from '@theme/Layout';
 import BusyBarDisplay from '@site/src/components/BusyBarDisplay';
 import StoreBadge, {STORE_URL} from '@site/src/components/StoreBadge';
+import useLatestVersions, {type LatestVersions} from '@site/src/components/useLatestVersions';
 import styles from './index.module.css';
 
 const RELEASES_URL = 'https://github.com/homotechsual/oncall-busybar-agent/releases/latest';
@@ -123,22 +124,42 @@ const installers = [
     href: STORE_URL,
     action: 'Open the Store listing',
     badge: true,
+    source: 'store',
   },
   {
     name: 'MSI',
     detail: 'One per architecture. Installs for everyone on the machine, so it suits Intune Win32 apps.',
     href: RELEASES_URL,
     action: 'Download from GitHub',
+    source: 'github',
   },
   {
     name: 'MSIX bundle',
     detail: 'One file for x86, x64 and ARM64. Double-click to install, or deploy as a line-of-business app.',
     href: RELEASES_URL,
     action: 'Download from GitHub',
+    source: 'github',
   },
-];
+] satisfies {
+  name: string;
+  detail: string;
+  href: string;
+  action: string;
+  badge?: boolean;
+  source: 'store' | 'github';
+}[];
+
+const releaseDate = new Intl.DateTimeFormat('en-GB', {day: 'numeric', month: 'long', year: 'numeric'});
+
+function versionText(source: 'store' | 'github', versions: LatestVersions): string | undefined {
+  if (source === 'store') {
+    return versions.store && `Version ${versions.store}`;
+  }
+  return versions.github && `Version ${versions.github.version}, released ${releaseDate.format(versions.github.published)}`;
+}
 
 export default function Home(): ReactNode {
+  const versions = useLatestVersions();
   return (
     <Layout
       title="Your BUSY Bar, in sync with Teams"
@@ -211,6 +232,7 @@ export default function Home(): ReactNode {
               <div key={item.name} className={styles.installer}>
                 <h3>{item.name}</h3>
                 <p>{item.detail}</p>
+                <p className={styles.version}>{versionText(item.source, versions)}</p>
                 {item.badge ? <StoreBadge /> : <Link href={item.href}>{item.action}</Link>}
               </div>
             ))}

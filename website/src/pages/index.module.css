@@ -275,6 +275,14 @@
   line-height: 1.6;
 }
 
+/* Filled in after load; the reserved line stops the links below from jumping. */
+.installer .version {
+  min-height: 1lh;
+  color: var(--site-muted);
+  font-size: 0.9rem;
+  font-variant-numeric: tabular-nums;
+}
+
 .installer a {
   font-weight: 600;
 }
