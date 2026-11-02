@@ -68,7 +68,8 @@ public sealed class SettingsForm : Form
 
         _testButton = new Button { Text = "Test connection", AutoSize = true };
         _testButton.Click += async (_, _) => await TestConnectionAsync().ConfigureAwait(true);
-        _testResult = new Label { AutoSize = true, MaximumSize = new Size(360, 0), Margin = new Padding(3, 6, 3, 3) };
+        // Hidden until there's a result, so it doesn't leave a blank line under the button.
+        _testResult = new Label { AutoSize = true, MaximumSize = new Size(360, 0), Margin = new Padding(3, 6, 3, 3), Visible = false };
         layout.Controls.Add(_testButton);
         layout.Controls.Add(_testResult);
 
@@ -175,6 +176,7 @@ public sealed class SettingsForm : Form
         }
 
         _testResult.Text = message;
+        _testResult.Visible = true;
         _testResult.ForeColor = success switch
         {
             true => Color.FromArgb(0x10, 0x7C, 0x10),
