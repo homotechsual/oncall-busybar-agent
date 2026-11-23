@@ -16,6 +16,7 @@
     "typecheck": "tsc"
   },
   "dependencies": {
+    "@docsense/indexer": "0.1.0",
     "@docusaurus/core": "3.10.2",
     "@docusaurus/faster": "3.10.2",
     "@docusaurus/preset-classic": "3.10.2",
@@ -24,7 +25,9 @@
     "@homotechsual/docusaurus-og": "1.0.0-alpha.133-homotechsual.1",
     "@homotechsual/docusaurus-plugin-plausible": "^1.1.1",
     "@mdx-js/react": "^3.0.0",
+    "cheerio": "^1.2.0",
     "clsx": "^2.0.0",
+    "docusaurus-plugin-docsense": "0.1.0",
     "prism-react-renderer": "^2.3.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
